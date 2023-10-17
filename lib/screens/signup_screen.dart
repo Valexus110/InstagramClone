@@ -53,6 +53,7 @@ class _SignupScreenState extends State<SignupScreen> {
         username: _usernameController.text,
         bio: _bioController.text,
         file: _image);
+    if(!mounted) return;
     if (res == "Success") {
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
@@ -89,7 +90,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: [
                   SvgPicture.asset(
                     'assets/ic_instagram.svg',
-                    color: primaryColor,
+                    colorFilter:  const ColorFilter.mode(primaryColor, BlendMode.srcIn),
                     height: 64,
                   ),
                   const SizedBox(height: 20),
@@ -136,12 +137,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   InkWell(
                       onTap: signUpUser,
                       child: Container(
-                          child: _isLoading
-                              ? const Center(
-                                  child: CircularProgressIndicator(
-                                  color: primaryColor,
-                                ))
-                              : const Text("Sign Up"),
                           width: double.infinity,
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -152,26 +147,32 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ),
                             color: blueColor,
-                          ))),
+                          ),
+                          child: _isLoading
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ))
+                              : const Text("Sign Up"))),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        child: const Text("Already have an account?"),
                         padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: const Text("Already have an account?"),
                       ),
                       GestureDetector(
                           onTap: navigateToLogin,
                           child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                             child: const Text(
                               "Login",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 4),
                           )),
                     ],
                   ),

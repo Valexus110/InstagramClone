@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_example/models/user.dart' as model;
 import 'package:instagram_example/providers/user_provider.dart';
@@ -11,20 +12,21 @@ import 'package:instagram_example/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../screens/profile_screen.dart';
 import 'like_animation.dart';
 
 class PostCard extends StatefulWidget {
-  final snap;
+  final Map<String, dynamic> snap;
   final bool savedScreen;
 
   const PostCard({Key? key, required this.snap, this.savedScreen = false})
       : super(key: key);
 
   @override
-  _PostCardState createState() => _PostCardState();
+  PostCardState createState() => PostCardState();
 }
 
-class _PostCardState extends State<PostCard> {
+class PostCardState extends State<PostCard> {
   bool isLikeAnimating = false;
   int commentLen = 0;
   bool saved = false;
@@ -48,7 +50,9 @@ class _PostCardState extends State<PostCard> {
         saved = true;
       }
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
   }
 
@@ -59,21 +63,25 @@ class _PostCardState extends State<PostCard> {
           .doc(widget.snap['postId'])
           .collection('comments')
           .get();
-      commentLen = snap.docs.length;
+      setState(() {
+        commentLen = snap.docs.length;
+      });
+      if (!mounted) return;
     } catch (e) {
+      if (!mounted) return;
       showSnackBar(context, e.toString());
     }
-    setState(() {});
   }
 
   Future<void> addBookmark(String postId, String uid) async {
     String message = "";
     await FirestoreMethods().addBookmark(postId, uid, saved);
     if (saved) {
-      message = "Removed from Saved";
+      message = "Removed from Favourite Posts";
     } else {
-      message = "Added to Saved";
+      message = "Added to Favourite Posts";
     }
+    if (!mounted) return;
     showSnackBar(context, message);
   }
 
@@ -96,63 +104,73 @@ class _PostCardState extends State<PostCard> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16)
                   .copyWith(right: 0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundImage: NetworkImage(
-                      widget.snap["profileImage"],
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        ProfileScreen(uid: widget.snap['uid']))),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundImage: NetworkImage(
+                        widget.snap["profileImage"],
+                      ),
                     ),
-                  ),
-                  Expanded(
-                      child: Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.snap["username"],
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                    Expanded(
+                        child: Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.snap["username"],
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  )),
-                  IconButton(
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (context) => Dialog(
-                                  child: ListView(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 16),
-                                      shrinkWrap: true,
-                                      children: [
-                                        'Delete',
-                                      ]
-                                          .map((e) => InkWell(
-                                                onTap: () async {
-                                                  FirestoreMethods().deletePost(
-                                                      widget.snap['postId']);
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    vertical: 12,
-                                                    horizontal: 16,
-                                                  ),
-                                                  child: Text(e),
-                                                ),
-                                              ))
-                                          .toList()),
-                                ));
-                      },
-                      icon: const Icon(Icons.more_vert))
-                ],
+                        ],
+                      ),
+                    )),
+                    if (FirebaseAuth.instance.currentUser!.uid ==
+                        widget.snap['uid'])
+                      IconButton(
+                          onPressed: () {
+                            showDialog(
+                                context: context,
+                                builder: (context) => Dialog(
+                                      child: ListView(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 16),
+                                          shrinkWrap: true,
+                                          children: [
+                                            'Delete Post',
+                                          ]
+                                              .map((e) => InkWell(
+                                                    onTap: () async {
+                                                      await FirestoreMethods()
+                                                          .deletePost(widget
+                                                              .snap['postId']);
+                                                      if (!mounted) return;
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        vertical: 12,
+                                                        horizontal: 16,
+                                                      ),
+                                                      child: Text(e),
+                                                    ),
+                                                  ))
+                                              .toList()),
+                                    ));
+                          },
+                          icon: const Icon(Icons.more_vert))
+                  ],
+                ),
               ),
             ),
             GestureDetector(
@@ -181,8 +199,6 @@ class _PostCardState extends State<PostCard> {
                     duration: const Duration(milliseconds: 200),
                     opacity: isLikeAnimating ? 1 : 0,
                     child: LikeAnimation(
-                      child: const Icon(Icons.favorite,
-                          color: Colors.white, size: 100),
                       isAnimating: isLikeAnimating,
                       duration: const Duration(
                         milliseconds: 400,
@@ -192,6 +208,8 @@ class _PostCardState extends State<PostCard> {
                           isLikeAnimating = false;
                         });
                       },
+                      child: const Icon(Icons.favorite,
+                          color: Colors.white, size: 100),
                     ),
                   ),
                 ],
@@ -243,6 +261,7 @@ class _PostCardState extends State<PostCard> {
                       child: IconButton(
                         onPressed: () async {
                           await addBookmark(widget.snap['postId'], user.uid);
+                          if (!mounted) return;
                           setState(() {
                             saved = !saved;
                           });
@@ -268,11 +287,11 @@ class _PostCardState extends State<PostCard> {
                   DefaultTextStyle(
                     style: Theme.of(context)
                         .textTheme
-                        .subtitle2!
+                        .titleSmall!
                         .copyWith(fontWeight: FontWeight.w800),
                     child: Text(
                       '${widget.snap["likes"].length} likes',
-                      style: Theme.of(context).textTheme.bodyText2,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
                   Container(
@@ -307,11 +326,12 @@ class _PostCardState extends State<PostCard> {
                               fontSize: 16,
                               color: secondaryColor,
                             )),
-                        onPressed: () =>
-                            Navigator.of(context).push(MaterialPageRoute(
+                        onPressed: () => Navigator.of(context)
+                            .push(MaterialPageRoute(
                                 builder: (context) => CommentsScreen(
                                       snap: widget.snap,
-                                    ))),
+                                    )))
+                            .then((value) => getComments()),
                       ),
                     ),
                   ),

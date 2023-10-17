@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class CommentCard extends StatefulWidget {
-  final snap;
+  final Map<String, dynamic> snap;
 
   const CommentCard({Key? key, required this.snap}) : super(key: key);
 
   @override
-  _CommentCardState createState() => _CommentCardState();
+  CommentCardState createState() => CommentCardState();
 }
 
-class _CommentCardState extends State<CommentCard> {
+class CommentCardState extends State<CommentCard> {
   @override
   Widget build(BuildContext context) {
     return Container(

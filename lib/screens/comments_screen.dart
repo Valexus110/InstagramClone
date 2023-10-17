@@ -7,16 +7,18 @@ import 'package:instagram_example/models/user.dart';
 import 'package:instagram_example/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../utils/utils.dart';
+
 class CommentsScreen extends StatefulWidget {
-  final snap;
+  final Map<String, dynamic>? snap;
 
   const CommentsScreen({Key? key, required this.snap}) : super(key: key);
 
   @override
-  _CommentsScreenState createState() => _CommentsScreenState();
+  CommentsScreenState createState() => CommentsScreenState();
 }
 
-class _CommentsScreenState extends State<CommentsScreen> {
+class CommentsScreenState extends State<CommentsScreen> {
   final TextEditingController _commentController = TextEditingController();
 
   @override
@@ -37,7 +39,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
       body: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection('posts')
-              .doc(widget.snap['postId'])
+              .doc(widget.snap?['postId'])
               .collection('comments')
               .orderBy('datePublished', descending: false)
               .snapshots(),
@@ -80,13 +82,15 @@ class _CommentsScreenState extends State<CommentsScreen> {
               ),
               InkWell(
                 onTap: () async {
-                  await FirestoreMethods().postComment(
+                  var message = await FirestoreMethods().postComment(
                       context,
-                      widget.snap['postId'],
+                      widget.snap?['postId'],
                       _commentController.text,
                       user.uid,
                       user.username,
                       user.photoUrl);
+                  if(!mounted) return;
+                  if (message != 'Ok') showSnackBar(context, message);
                   setState(() {
                     _commentController.text = "";
                   });

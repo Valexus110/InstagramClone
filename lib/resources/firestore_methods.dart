@@ -1,10 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:instagram_example/models/post.dart';
 import 'package:instagram_example/resources/storage_methods.dart';
-import 'package:instagram_example/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class FirestoreMethods {
@@ -21,7 +20,7 @@ class FirestoreMethods {
     try {
       String postId = const Uuid().v1();
       String photoUrl = await StorageMethods()
-          .uploadImagetoStorage("posts", file, true, postId);
+          .uploadImageToStorage("posts", file, true, postId);
       Post post = Post(
           description: description,
           uid: uid,
@@ -51,21 +50,23 @@ class FirestoreMethods {
         });
       }
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
   }
 
-  Future<void> postComment(BuildContext context, String postId, String text,
+  Future<String> postComment(BuildContext context, String postId, String text,
       String uid, String name, String profilePic) async {
     String message = 'Unknown error';
-    var connection;
+    List<InternetAddress>? connection;
     try {
       connection = await InternetAddress.lookup('example.com');
     } on SocketException catch (_) {
       connection = null;
     }
     try {
-      if (text.isNotEmpty && connection.isNotEmpty) {
+      if (text.isNotEmpty && connection!.isNotEmpty) {
         String commentId = const Uuid().v1();
         await _firestore
             .collection('posts')
@@ -81,13 +82,15 @@ class FirestoreMethods {
           'datePublished': DateTime.now(),
         });
         message = 'Ok';
-      } else if (text.isEmpty && connection.isNotEmpty) {
+      } else if (text.isEmpty && connection!.isNotEmpty) {
         message = 'Text is empty';
       }
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
-    if (message != 'Ok') showSnackBar(context, message);
+    return message;
   }
 
   Future<void> deletePost(String postId) async {
@@ -95,7 +98,9 @@ class FirestoreMethods {
       await _firestore.collection('posts').doc(postId).delete();
       StorageMethods().deleteImageFromStorage("posts", postId);
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
   }
 
@@ -108,7 +113,9 @@ class FirestoreMethods {
         'bio': bio,
       });
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
   }
 
@@ -139,7 +146,9 @@ class FirestoreMethods {
         });
       }
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
   }
 

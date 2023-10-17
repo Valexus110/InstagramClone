@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:instagram_example/models/user.dart' as model;
 import 'package:instagram_example/resources/storage_methods.dart';
 
@@ -23,7 +24,7 @@ class AuthMethods {
       required String bio,
       required Uint8List? file}) async {
     String res = "Please fill all fields";
-    file == null ? res = res + " and add photo" : res = res;
+    file == null ? res = "$res and add photo" : res = res;
     try {
       if (email.isNotEmpty &&
           password.isNotEmpty &&
@@ -36,7 +37,7 @@ class AuthMethods {
               .createUserWithEmailAndPassword(email: email, password: password);
 
           String photoUrl = await StorageMethods()
-              .uploadImagetoStorage('profilePics', file, false);
+              .uploadImageToStorage('profilePics', file, false);
 
           model.User user = model.User(
             username: username,
@@ -79,7 +80,9 @@ class AuthMethods {
       }
     } catch (err) {
       res = "Invalid email or password";
-      print(err.toString());
+      if (kDebugMode) {
+        print(err.toString());
+      }
     }
     return res;
   }

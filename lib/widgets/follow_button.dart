@@ -2,20 +2,16 @@ import 'package:flutter/material.dart';
 
 class FollowButton extends StatelessWidget {
   final Function()? func;
-  final Color backgroundColor;
-  final Color borderColor;
-  final Color textColor;
   final String text;
   final int divider;
+  final bool isFollow;
 
   const FollowButton(
       {Key? key,
       this.func,
-      required this.backgroundColor,
-      required this.borderColor,
-      required this.textColor,
       required this.text,
-      required this.divider})
+      required this.divider,
+      required this.isFollow})
       : super(key: key);
 
   @override
@@ -27,20 +23,20 @@ class FollowButton extends StatelessWidget {
           onPressed: func,
           child: Container(
             decoration: BoxDecoration(
-              color: backgroundColor,
-              border: Border.all(color: borderColor),
+              color: isFollow ? Colors.blue : Colors.white,
+              border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(5),
             ),
             alignment: Alignment.center,
+            width: width / divider,
+            height: 27,
             child: Text(
               text,
               style: TextStyle(
-                color: textColor,
+                color: isFollow ? Colors.white : Colors.black,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            width: width / divider,
-            height: 27,
           ),
         ));
   }

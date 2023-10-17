@@ -62,7 +62,9 @@ class _MyAppState extends State<MyApp> {
       await InternetAddress.lookup('example.com');
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
-        print("user is found");
+        if (kDebugMode) {
+          print("user is found");
+        }
         screen = const ResponsiveLayout(
             mobileScreenLayout: MobileScreenLayout(),
             webScreenLayout: WebScreenLayout());
@@ -70,14 +72,18 @@ class _MyAppState extends State<MyApp> {
           _isLoading = false;
         });
       } else {
-        print("user is not exist");
+        if (kDebugMode) {
+          print("user is not exist");
+        }
         screen = const LoginScreen();
         setState(() {
           _isLoading = false;
         });
       }
     } on SocketException catch (_) {
-      print("reconnecting");
+      if (kDebugMode) {
+        print("reconnecting");
+      }
       startTimer();
     }
   }

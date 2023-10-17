@@ -35,6 +35,14 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     String res = await AuthMethods().loginUser(
         email: _emailController.text, password: _passController.text);
+    if (!mounted) return;
+    goToMainScreen(res);
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void goToMainScreen(String res) {
     if (res == "Success") {
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
@@ -45,9 +53,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       showSnackBar(context, res);
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void navigateToSignup() {
@@ -76,7 +81,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   //  Flexible(child: Container(), flex: 2),
                   SvgPicture.asset(
                     'assets/ic_instagram.svg',
-                    color: primaryColor,
+                    colorFilter:
+                        const ColorFilter.mode(primaryColor, BlendMode.srcIn),
                     height: 64,
                   ),
                   const SizedBox(height: 64),
@@ -101,7 +107,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             )
                           : Container(
-                              child: const Text("Log in"),
                               width: double.infinity,
                               alignment: Alignment.center,
                               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -112,27 +117,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 color: blueColor,
-                              ))),
+                              ),
+                              child: const Text("Log in"))),
                   const SizedBox(height: 12),
                   //  Flexible(child: Container(), flex: 2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        child: const Text("Don't have an account yet?"),
                         padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: const Text("Don't have an account yet?"),
                       ),
                       GestureDetector(
                           onTap: navigateToSignup,
                           child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                             child: const Text(
                               "Sign up",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 4),
                           )),
                     ],
                   ),

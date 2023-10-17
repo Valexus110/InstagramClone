@@ -32,11 +32,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
     try {
       String res = await FirestoreMethods().uploadPost(
           _descriptionController.text, _file!, uid, username, profileImage);
+      if (!mounted) return;
       if (res == "success") {
         setState(() {
           _isLoading = false;
         });
-        showSnackBar(context, 'Posted!');
+        showSnackBar(context, 'Successfully posted');
         clearImage();
       } else {
         setState(() {
@@ -72,10 +73,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 child: const Text("Choose from gallery"),
                 onPressed: () async {
                   Navigator.of(context).pop();
-                  Uint8List file = await pickImage(ImageSource.gallery);
-                  setState(() {
-                    _file = file;
-                  });
+                  Uint8List? file = await pickImage(ImageSource.gallery);
+                  if (file != null) {
+                    setState(() {
+                      _file = file;
+                    });
+                  }
                 },
               ),
               SimpleDialogOption(
@@ -112,14 +115,17 @@ class _AddPostScreenState extends State<AddPostScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  "Click below to create a new post!",
+                  "Add new post",
                   style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.upload),
+                  icon: const Icon(
+                    Icons.post_add,
+                    size: 25,
+                  ),
                   onPressed: () => _selectImage(context),
                 ),
               ],
@@ -132,7 +138,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => clearImage(),
               ),
-              title: const Text("Post to"),
+              title: const Text("Adding new post"),
               centerTitle: false,
               actions: [
                 TextButton(

@@ -13,9 +13,19 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+  Stream<QuerySnapshot<Map<String, dynamic>>>? stream;
+
   @override
   void initState() {
     super.initState();
+    stream = _getData();
+  }
+
+  _getData() {
+    return FirebaseFirestore.instance
+        .collection('posts')
+        .orderBy('datePublished', descending: true)
+        .snapshots();
   }
 
   @override
@@ -31,7 +41,8 @@ class _FeedScreenState extends State<FeedScreen> {
               centerTitle: false,
               title: SvgPicture.asset(
                 'assets/ic_instagram.svg',
-                color: primaryColor,
+                colorFilter:
+                    const ColorFilter.mode(primaryColor, BlendMode.srcIn),
                 height: 32,
               ),
               actions: [
@@ -42,28 +53,32 @@ class _FeedScreenState extends State<FeedScreen> {
               ],
             ),
       body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('posts')
-              .orderBy('datePublished', descending: true)
-              .snapshots(),
+          stream: stream,
           builder: (context,
               AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
               return const Center(
                 child: CircularProgressIndicator(),
               );
             }
-            return ListView.builder(
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) => Container(
-                      margin: EdgeInsets.symmetric(
-                        horizontal: width > webScreenSize ? width * 0.3 : 0,
-                        vertical: width > webScreenSize ? 15 : 0,
-                      ),
-                      child: PostCard(
-                        snap: snapshot.data!.docs[index].data(),
-                      ),
-                    ));
+            return RefreshIndicator.adaptive(
+              onRefresh: () async {
+                setState(() {});
+                stream = _getData();
+                await Future.delayed(const Duration(milliseconds: 300));
+              },
+              child: ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) => Container(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: width > webScreenSize ? width * 0.3 : 0,
+                          vertical: width > webScreenSize ? 15 : 0,
+                        ),
+                        child: PostCard(
+                          snap: snapshot.data!.docs[index].data(),
+                        ),
+                      )),
+            );
           }),
     );
   }

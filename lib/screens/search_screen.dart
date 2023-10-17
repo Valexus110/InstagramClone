@@ -13,12 +13,14 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
-  bool isShowUsers = false;
-  var name = "";
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  String currName = "";
+  String userId = "";
 
   @override
   void initState() {
-    getUserName();
+    userId = auth.currentUser!.uid;
     super.initState();
   }
 
@@ -28,13 +30,21 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  void getUserName() async {
-    final FirebaseAuth _auth = FirebaseAuth.instance;
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    User currentUser = _auth.currentUser!;
-    var snap = await _firestore.collection('users').doc(currentUser.uid).get();
-    name = snap.data()!['username'];
-    print(name);
+  getUsers() async {
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> actualUsers = [];
+    if (currName.isEmpty) return;
+    var users = await firestore.collection('users').get();
+    for (var user in users.docs) {
+      if (user.id == userId) continue;
+      if (user
+          .data()['username']
+          .toString()
+          .toLowerCase()
+          .contains(currName.toLowerCase())) {
+        actualUsers.add(user);
+      }
+    }
+    return actualUsers;
   }
 
   @override
@@ -49,68 +59,47 @@ class _SearchScreenState extends State<SearchScreen> {
                 hintText: 'type a username',
                 labelText: "Search for a user",
                 labelStyle: TextStyle(fontSize: 20)),
-            onChanged: (_) {
+            onChanged: (str) {
               setState(() {
-                isShowUsers = false;
-              });
-            },
-            onFieldSubmitted: (String currName) {
-              print(name);
-              print(currName);
-              name = name.toLowerCase().trim();
-              currName = currName.toLowerCase().trim();
-              setState(() {
-                if (currName != name) {
-                  isShowUsers = true;
-                }
+                currName = str;
               });
             },
           ),
           bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(4.0),
               child: Container(
                 color: Colors.grey,
                 height: 4.0,
-              ),
-              preferredSize: const Size.fromHeight(4.0)),
+              )),
         ),
-        body: isShowUsers
-            ? FutureBuilder(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .where(
-                      "username",
-                      isEqualTo: _controller.text,
-                    )
-                    .get(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  return ListView.builder(
-                      itemCount: (snapshot.data! as dynamic).docs.length,
-                      itemBuilder: (context, index) {
-                        return InkWell(
-                          onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (context) => ProfileScreen(
-                                      uid: (snapshot.data! as dynamic)
-                                          .docs[index]['uid'],
-                                      search: true))),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                  (snapshot.data! as dynamic).docs[index]
-                                      ['photoUrl']),
-                            ),
-                            title: Text((snapshot.data! as dynamic).docs[index]
-                                ['username']),
-                          ),
-                        );
-                      });
-                },
-              )
-            : Container());
+        body: FutureBuilder(
+          future: getUsers(),
+          builder: (context, snapshot) {
+            if (currName.isEmpty) {
+              return Container();
+            } else if (!snapshot.hasData && currName.isNotEmpty) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return ListView.builder(
+                itemCount: (snapshot.data! as dynamic).length,
+                itemBuilder: (context, index) {
+                  return InkWell(
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => ProfileScreen(
+                            uid: (snapshot.data! as dynamic)[index]['uid']))),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: NetworkImage(
+                            (snapshot.data! as dynamic)[index]['photoUrl']),
+                      ),
+                      title:
+                          Text((snapshot.data! as dynamic)[index]['username']),
+                    ),
+                  );
+                });
+          },
+        ));
   }
 }

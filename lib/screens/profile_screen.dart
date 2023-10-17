@@ -4,17 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:instagram_example/resources/auth_methods.dart';
 import 'package:instagram_example/resources/firestore_methods.dart';
 import 'package:instagram_example/screens/login_screen.dart';
+import 'package:instagram_example/screens/saved_posts_screen.dart';
+import 'package:instagram_example/screens/user_list_screen.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:instagram_example/widgets/follow_button.dart';
-import 'package:instagram_example/widgets/sample_menu.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
-  final bool search;
 
-  const ProfileScreen({Key? key, required this.uid, required this.search})
-      : super(key: key);
+  const ProfileScreen({Key? key, required this.uid}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ProfileScreenState();
@@ -46,19 +45,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isLoading = true;
     });
     try {
-      var uid =
-          (widget.search) ? widget.uid : FirebaseAuth.instance.currentUser!.uid;
-      var userSnap =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      var userSnap = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.uid)
+          .get();
       var postSnap = await FirebaseFirestore.instance
           .collection('posts')
-          .where('uid', isEqualTo: uid)
+          .where('uid', isEqualTo: widget.uid)
           .get();
+      if (!mounted) return;
       postLen = postSnap.docs.length;
       userData = userSnap.data()!;
       followers = userData['followers'].length;
       following = userData['following'].length;
-      isFollowing = userData['followers'].contains(uid);
+      isFollowing = userData['followers']
+          .contains(FirebaseAuth.instance.currentUser!.uid);
       setState(() {
         isLoading = true;
       });
@@ -86,7 +87,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               actions: [
-                SampleMenu(),
+                IconButton(
+                    onPressed: () {
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+                    icon: const Icon(Icons.home)),
+                IconButton(
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const SavedPostsScreen()));
+                    },
+                    icon: const Icon(Icons.star)),
               ],
               centerTitle: false,
             ),
@@ -112,29 +123,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    buildStartColumn(postLen, "posts"),
-                                    buildStartColumn(followers, "followers"),
-                                    buildStartColumn(following, "following"),
+                                    buildStartColumn(postLen, "Posts"),
+                                    buildStartColumn(followers, "Followers"),
+                                    buildStartColumn(following, "Following"),
                                   ],
                                 ),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    (!widget.search)
+                                    (widget.uid ==
+                                            FirebaseAuth
+                                                .instance.currentUser!.uid)
                                         ? FollowButton(
                                             func: () async {
                                               await AuthMethods().signOut();
+                                              if (!mounted) return;
                                               Navigator.of(context).pushReplacement(
                                                   MaterialPageRoute(
                                                       builder: (context) =>
                                                           const LoginScreen()));
                                             },
                                             text: 'Sign Out',
-                                            backgroundColor:
-                                                mobileBackgroundColor,
-                                            textColor: primaryColor,
-                                            borderColor: Colors.grey,
+                                            isFollow: false,
                                             divider: 2,
                                           )
                                         : isFollowing
@@ -151,9 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   });
                                                 },
                                                 text: 'Unfollow',
-                                                backgroundColor: Colors.white,
-                                                textColor: Colors.black,
-                                                borderColor: Colors.grey,
+                                                isFollow: false,
                                                 divider: 2,
                                               )
                                             : FollowButton(
@@ -169,9 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   });
                                                 },
                                                 text: 'Follow',
-                                                backgroundColor: Colors.blue,
-                                                textColor: Colors.white,
-                                                borderColor: Colors.grey,
+                                                isFollow: true,
                                                 divider: 2,
                                               )
                                   ],
@@ -271,22 +278,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Column buildStartColumn(int num, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(num.toString(),
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        Container(
-          margin: const EdgeInsets.only(top: 4),
-          child: Text(label,
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.grey)),
-        ),
-      ],
+  buildStartColumn(int num, String label) {
+    return GestureDetector(
+      onTap: () => {
+        if (label != "Posts" && num > 0)
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => UserListScreen(
+                  userId: widget.uid,
+                  title: label,
+                  isFollowers: label == "Followers")))
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(num.toString(),
+              style:
+                  const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            child: Text(label,
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey)),
+          ),
+        ],
+      ),
     );
   }
 }

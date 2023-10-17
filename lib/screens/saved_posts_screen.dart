@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_example/models/post.dart';
 import 'package:instagram_example/utils/global_variables.dart';
@@ -58,7 +59,9 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
         }
       }
     } catch (e) {
-      print(e.toString());
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
   }
 
@@ -70,7 +73,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
           automaticallyImplyLeading: false,
           centerTitle: true,
           title: const Text(
-            "Saved Posts",
+            "Favourite Posts",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
         ),
