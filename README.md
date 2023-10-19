@@ -1,3 +1,3 @@
-# instagram_clone_app
+# InstagramClone
 
 An Instagram clone made with Flutter
