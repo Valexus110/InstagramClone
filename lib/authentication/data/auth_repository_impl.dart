@@ -1,73 +1,19 @@
-import 'dart:typed_data';
+part of '../ui/auth_provider.dart';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'package:instagram_example/models/user.dart' as model;
-import 'package:instagram_example/resources/storage_methods.dart';
-
-class AuthMethods {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+class _AuthRepositoryImpl implements AuthRepository {
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final storageRepository = StorageController().storageRepository;
 
+  @override
   Future<model.User> getUserDetails() async {
-    User currentUser = _auth.currentUser!;
+    auth.User currentUser = _auth.currentUser!;
     DocumentSnapshot snap =
         await _firestore.collection('users').doc(currentUser.uid).get();
-    return model.User.fromSnap(snap);
+    return model.User.fromJson(snap);
   }
 
-  Future<String> signupUser(
-      {required String email,
-      required String password,
-      required String username,
-      required String bio,
-      required Uint8List? file}) async {
-    String res = "Please fill all fields";
-    file == null ? res = "$res and add photo" : res = res;
-    try {
-      if (email.isNotEmpty &&
-          password.isNotEmpty &&
-          username.isNotEmpty &&
-          bio.isNotEmpty) {
-        if (file == null) {
-          res = "You need to add the photo to complete registration";
-        } else {
-          UserCredential userCredential = await _auth
-              .createUserWithEmailAndPassword(email: email, password: password);
-
-          String photoUrl = await StorageMethods()
-              .uploadImageToStorage('profilePics', file, false);
-
-          model.User user = model.User(
-            username: username,
-            uid: userCredential.user!.uid,
-            email: email,
-            bio: bio,
-            followers: [],
-            following: [],
-            photoUrl: photoUrl,
-          );
-
-          await _firestore
-              .collection('users')
-              .doc(userCredential.user!.uid)
-              .set(user.toJson());
-          res = "Success";
-        }
-      }
-    } on FirebaseException catch (err) {
-      if (err.code == 'invalid-email') {
-        res = "The email is badly formatted.";
-      } else if (err.code == 'weak-password') {
-        res = "Your password should be at least 6 characters.";
-      }
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
-
+  @override
   Future<String> loginUser(
       {required String email, required String password}) async {
     String res = "Please fill all fields";
@@ -87,7 +33,64 @@ class AuthMethods {
     return res;
   }
 
+  @override
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  @override
+  Future<String> signupUser(
+      {required String email,
+      required String password,
+      required String username,
+      required String bio,
+      required Uint8List? file}) async {
+    String res = "Please fill all fields";
+    file == null ? res = "$res and add photo" : res = res;
+    try {
+      if (email.isNotEmpty &&
+          password.isNotEmpty &&
+          username.isNotEmpty &&
+          bio.isNotEmpty) {
+        if (file == null) {
+          res = "You need to add the photo to complete registration";
+        } else {
+          auth.UserCredential userCredential = await _auth
+              .createUserWithEmailAndPassword(email: email, password: password);
+
+          String photoUrl = await storageRepository.uploadImageToStorage(
+              'profilePics', file, false);
+          model.User currentUser = model.User(
+            username: username,
+            uid: userCredential.user!.uid,
+            email: email,
+            bio: bio,
+            followers: [],
+            following: [],
+            photoUrl: photoUrl,
+          );
+
+          await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .set(currentUser.toJson());
+          res = "Success";
+        }
+      }
+    } on FirebaseException catch (err) {
+      if (err.code == 'invalid-email') {
+        res = "The email is badly formatted.";
+      } else if (err.code == 'weak-password') {
+        res = "Your password should be at least 6 characters.";
+      }
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
+  @override
+  getUser() {
+    return _auth.currentUser!.uid;
   }
 }

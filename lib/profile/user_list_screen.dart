@@ -2,10 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_example/resources/firestore_methods.dart';
-import 'package:instagram_example/screens/profile_screen.dart';
+import 'package:instagram_example/profile/profile_screen.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:instagram_example/widgets/follow_button.dart';
+
+import '../data/firestore_methods.dart';
 
 class UserListScreen extends StatefulWidget {
   final String? userId;
@@ -160,7 +161,7 @@ class UserListScreenState extends State<UserListScreen> {
                                           userInfo[i]['uid']);
                                       var name = userInfo[i]['username'];
                                       userInfo.removeAt(i);
-                                      if (!mounted) return;
+                                      if (!context.mounted) return;
                                       showSnackBar(context,
                                           "successfully followed $name");
                                       await getData();

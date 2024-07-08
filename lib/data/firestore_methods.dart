@@ -3,11 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:instagram_example/models/post.dart';
-import 'package:instagram_example/resources/storage_methods.dart';
 import 'package:uuid/uuid.dart';
+
+import '../storage/storage_controller.dart';
 
 class FirestoreMethods {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final storageRepository = StorageController().storageRepository;
 
   Future<String> uploadPost(
     String description,
@@ -19,8 +21,8 @@ class FirestoreMethods {
     String res = "some error occurred";
     try {
       String postId = const Uuid().v1();
-      String photoUrl = await StorageMethods()
-          .uploadImageToStorage("posts", file, true, postId);
+      String photoUrl = await storageRepository.uploadImageToStorage(
+          "posts", file, true, postId);
       Post post = Post(
           description: description,
           uid: uid,
@@ -96,7 +98,7 @@ class FirestoreMethods {
   Future<void> deletePost(String postId) async {
     try {
       await _firestore.collection('posts').doc(postId).delete();
-      StorageMethods().deleteImageFromStorage("posts", postId);
+      storageRepository.deleteImageFromStorage("posts", postId);
     } catch (e) {
       if (kDebugMode) {
         print(e.toString());

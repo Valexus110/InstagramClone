@@ -1,14 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_example/resources/auth_methods.dart';
-import 'package:instagram_example/resources/firestore_methods.dart';
-import 'package:instagram_example/screens/login_screen.dart';
-import 'package:instagram_example/screens/saved_posts_screen.dart';
-import 'package:instagram_example/screens/user_list_screen.dart';
+import 'package:instagram_example/authentication/ui/auth_provider.dart';
+import 'package:instagram_example/profile/saved_posts_screen.dart';
+import 'package:instagram_example/profile/user_list_screen.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:instagram_example/widgets/follow_button.dart';
+import 'package:provider/provider.dart';
+import 'package:instagram_example/models/user.dart' as model;
+
+import '../authentication/ui/login_screen.dart';
+import '../data/firestore_methods.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -21,7 +24,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late var _editingController = TextEditingController();
-  var userData = {};
+  late model.User userData;
   int postLen = 0;
   int followers = 0;
   int following = 0;
@@ -45,21 +48,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isLoading = true;
     });
     try {
-      var userSnap = await FirebaseFirestore.instance
+      userData = model.User.fromJson(await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.uid)
-          .get();
+          .get());
       var postSnap = await FirebaseFirestore.instance
           .collection('posts')
           .where('uid', isEqualTo: widget.uid)
           .get();
       if (!mounted) return;
       postLen = postSnap.docs.length;
-      userData = userSnap.data()!;
-      followers = userData['followers'].length;
-      following = userData['following'].length;
-      isFollowing = userData['followers']
-          .contains(FirebaseAuth.instance.currentUser!.uid);
+      // userData = userSnap.data()!;
+      followers = userData.followers.length;
+      following = userData.followers.length;
+      isFollowing =
+          userData.followers.contains(FirebaseAuth.instance.currentUser!.uid);
       setState(() {
         isLoading = true;
       });
@@ -80,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             appBar: AppBar(
               backgroundColor: mobileBackgroundColor,
               title: Text(
-                userData['username'],
+                userData.username,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -111,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           CircleAvatar(
                             backgroundColor: Colors.grey,
-                            backgroundImage: NetworkImage(userData['photoUrl']),
+                            backgroundImage: NetworkImage(userData.photoUrl),
                             radius: 40,
                           ),
                           Expanded(
@@ -137,8 +140,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 .instance.currentUser!.uid)
                                         ? FollowButton(
                                             func: () async {
-                                              await AuthMethods().signOut();
-                                              if (!mounted) return;
+                                              await Provider.of<AuthProvider>(
+                                                      context,
+                                                      listen: false)
+                                                  .signOut();
+                                              if (!context.mounted) return;
                                               Navigator.of(context).pushReplacement(
                                                   MaterialPageRoute(
                                                       builder: (context) =>
@@ -155,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                       .followUser(
                                                           FirebaseAuth.instance
                                                               .currentUser!.uid,
-                                                          userData['uid']);
+                                                          userData.uid);
                                                   setState(() {
                                                     isFollowing = false;
                                                     followers--;
@@ -171,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                       .followUser(
                                                           FirebaseAuth.instance
                                                               .currentUser!.uid,
-                                                          userData['uid']);
+                                                          userData.uid);
                                                   setState(() {
                                                     isFollowing = true;
                                                     followers++;
@@ -192,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.only(top: 15),
                         child: Text(
-                          userData['email'],
+                          userData.email,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
@@ -206,7 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   widget.uid
                               ? null
                               : changeBio,
-                          child: Text(userData['bio'],
+                          child: Text(userData.bio,
                               style: const TextStyle(
                                   fontSize: 15, color: Colors.white)),
                         ),
@@ -248,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void changeBio() {
-    _editingController = TextEditingController(text: userData['bio']);
+    _editingController = TextEditingController(text: userData.bio);
     showDialog(
       context: context,
       builder: (context) {

@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_example/resources/firestore_methods.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/widgets/comment_card.dart';
 import 'package:instagram_example/models/user.dart';
-import 'package:instagram_example/providers/user_provider.dart';
+import 'package:instagram_example/authentication/ui/auth_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../data/firestore_methods.dart';
 import '../utils/utils.dart';
 
 class CommentsScreen extends StatefulWidget {
@@ -29,7 +29,7 @@ class CommentsScreenState extends State<CommentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<UserProvider>(context).getUser;
+    final User user = Provider.of<AuthProvider>(context).getUser;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: mobileBackgroundColor,
@@ -80,7 +80,7 @@ class CommentsScreenState extends State<CommentsScreen> {
                   ),
                 ),
               ),
-              InkWell(
+              GestureDetector(
                 onTap: () async {
                   var message = await FirestoreMethods().postComment(
                       context,
@@ -89,7 +89,7 @@ class CommentsScreenState extends State<CommentsScreen> {
                       user.uid,
                       user.username,
                       user.photoUrl);
-                  if(!mounted) return;
+                  if(!context.mounted) return;
                   if (message != 'Ok') showSnackBar(context, message);
                   setState(() {
                     _commentController.text = "";

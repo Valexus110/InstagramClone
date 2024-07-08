@@ -3,11 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:instagram_example/models/user.dart';
-import 'package:instagram_example/providers/user_provider.dart';
-import 'package:instagram_example/resources/firestore_methods.dart';
+import 'package:instagram_example/authentication/ui/auth_provider.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:provider/provider.dart';
+
+import '../data/firestore_methods.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({Key? key}) : super(key: key);
@@ -107,7 +108,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<UserProvider>(context).getUser;
+    final User user = Provider.of<AuthProvider>(context).getUser;
 
     return _file == null
         ? Center(

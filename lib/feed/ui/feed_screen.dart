@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:instagram_example/feed/ui/feed_controller.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/global_variables.dart';
 import 'package:instagram_example/widgets/post_card.dart';
@@ -14,18 +15,12 @@ class FeedScreen extends StatefulWidget {
 
 class _FeedScreenState extends State<FeedScreen> {
   Stream<QuerySnapshot<Map<String, dynamic>>>? stream;
+  final feedRepository = FeedController().feedRepository;
 
   @override
   void initState() {
     super.initState();
-    stream = _getData();
-  }
-
-  _getData() {
-    return FirebaseFirestore.instance
-        .collection('posts')
-        .orderBy('datePublished', descending: true)
-        .snapshots();
+    stream = feedRepository.getPosts();
   }
 
   @override
@@ -64,7 +59,7 @@ class _FeedScreenState extends State<FeedScreen> {
             return RefreshIndicator.adaptive(
               onRefresh: () async {
                 setState(() {});
-                stream = _getData();
+                stream = feedRepository.getPosts();
                 await Future.delayed(const Duration(milliseconds: 300));
               },
               child: ListView.builder(

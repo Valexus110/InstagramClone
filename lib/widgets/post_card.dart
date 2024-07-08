@@ -3,16 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_example/models/user.dart' as model;
-import 'package:instagram_example/providers/user_provider.dart';
-import 'package:instagram_example/resources/firestore_methods.dart';
-import 'package:instagram_example/screens/comments_screen.dart';
+import 'package:instagram_example/authentication/ui/auth_provider.dart';
+import 'package:instagram_example/comments/comments_screen.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/global_variables.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../screens/profile_screen.dart';
+import '../data/firestore_methods.dart';
+import '../profile/profile_screen.dart';
 import 'like_animation.dart';
 
 class PostCard extends StatefulWidget {
@@ -87,7 +87,7 @@ class PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    final model.User user = Provider.of<UserProvider>(context).getUser;
+    final model.User user = Provider.of<AuthProvider>(context).getUser;
     final width = MediaQuery.of(context).size.width;
     return Container(
         decoration: BoxDecoration(
@@ -147,12 +147,12 @@ class PostCardState extends State<PostCard> {
                                           children: [
                                             'Delete Post',
                                           ]
-                                              .map((e) => InkWell(
+                                              .map((e) => GestureDetector(
                                                     onTap: () async {
                                                       await FirestoreMethods()
                                                           .deletePost(widget
                                                               .snap['postId']);
-                                                      if (!mounted) return;
+                                                      if (!context.mounted) return;
                                                       Navigator.of(context)
                                                           .pop();
                                                     },
@@ -316,7 +316,7 @@ class PostCardState extends State<PostCard> {
                       ),
                     ),
                   ),
-                  InkWell(
+                  GestureDetector(
                     onTap: () {},
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 4),

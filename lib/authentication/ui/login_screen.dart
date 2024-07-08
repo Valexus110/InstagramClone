@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:instagram_example/resources/auth_methods.dart';
-import 'package:instagram_example/responsive/mobile_screen_layout.dart';
-import 'package:instagram_example/responsive/resp_layout_screen.dart';
-import 'package:instagram_example/responsive/web_screen_layout.dart';
-import 'package:instagram_example/screens/signup_screen.dart';
+import 'package:instagram_example/authentication/ui/auth_provider.dart';
+import 'package:instagram_example/authentication/ui/signup_screen.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/global_variables.dart';
 import 'package:instagram_example/utils/utils.dart';
-import 'package:instagram_example/widgets/text_input_field.dart';
+import 'package:instagram_example/authentication/widgets/text_input_field.dart';
+import 'package:provider/provider.dart';
+
+import '../../coordinate_layout/coordinate_layout.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
     });
-    String res = await AuthMethods().loginUser(
+    String res = await Provider.of<AuthProvider>(context,listen: false).loginUser(
         email: _emailController.text, password: _passController.text);
     if (!mounted) return;
     goToMainScreen(res);
@@ -45,10 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void goToMainScreen(String res) {
     if (res == "Success") {
       Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (context) => const ResponsiveLayout(
-                  mobileScreenLayout: MobileScreenLayout(),
-                  webScreenLayout: WebScreenLayout())),
+          MaterialPageRoute(builder: (context) => const CoordinateLayout()),
           (Route<dynamic> route) => false);
     } else {
       showSnackBar(context, res);
@@ -98,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       textInputType: TextInputType.text,
                       isPass: true),
                   const SizedBox(height: 20),
-                  InkWell(
+                  GestureDetector(
                       onTap: loginUser,
                       child: _isLoading
                           ? const Center(

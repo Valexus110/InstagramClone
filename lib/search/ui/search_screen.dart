@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_example/screens/profile_screen.dart';
+import 'package:instagram_example/profile/profile_screen.dart';
+import 'package:instagram_example/search/ui/search_controller.dart';
 import 'package:instagram_example/utils/colors.dart';
+import 'package:instagram_example/models/user.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -13,14 +13,11 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
-  final FirebaseAuth auth = FirebaseAuth.instance;
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  String currName = "";
-  String userId = "";
+  final SearchUsersController _searchController = SearchUsersController();
+  String currentName = "";
 
   @override
   void initState() {
-    userId = auth.currentUser!.uid;
     super.initState();
   }
 
@@ -30,22 +27,22 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  getUsers() async {
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> actualUsers = [];
-    if (currName.isEmpty) return;
-    var users = await firestore.collection('users').get();
-    for (var user in users.docs) {
-      if (user.id == userId) continue;
-      if (user
-          .data()['username']
-          .toString()
-          .toLowerCase()
-          .contains(currName.toLowerCase())) {
-        actualUsers.add(user);
-      }
-    }
-    return actualUsers;
-  }
+  // getUsers() async {
+  //   List<QueryDocumentSnapshot<Map<String, dynamic>>> actualUsers = [];
+  //   if (currName.isEmpty) return;
+  //   var users = await firestore.collection('users').get();
+  //   for (var user in users.docs) {
+  //     if (user.id == userId) continue;
+  //     if (user
+  //         .data()['username']
+  //         .toString()
+  //         .toLowerCase()
+  //         .contains(currName.toLowerCase())) {
+  //       actualUsers.add(user);
+  //     }
+  //   }
+  //   return actualUsers;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +58,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 labelStyle: TextStyle(fontSize: 20)),
             onChanged: (str) {
               setState(() {
-                currName = str;
+                currentName = str;
               });
             },
           ),
@@ -73,11 +70,11 @@ class _SearchScreenState extends State<SearchScreen> {
               )),
         ),
         body: FutureBuilder(
-          future: getUsers(),
+          future: _searchController.searchRepository.getUsers(currentName),
           builder: (context, snapshot) {
-            if (currName.isEmpty) {
+            if (currentName.isEmpty) {
               return Container();
-            } else if (!snapshot.hasData && currName.isNotEmpty) {
+            } else if (!snapshot.hasData && currentName.isNotEmpty) {
               return const Center(
                 child: CircularProgressIndicator(),
               );
@@ -85,17 +82,18 @@ class _SearchScreenState extends State<SearchScreen> {
             return ListView.builder(
                 itemCount: (snapshot.data! as dynamic).length,
                 itemBuilder: (context, index) {
-                  return InkWell(
+                  var user = User.fromJson((snapshot.data! as dynamic)[index]);
+                  return GestureDetector(
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => ProfileScreen(
-                            uid: (snapshot.data! as dynamic)[index]['uid']))),
+                              uid: user.uid,
+                            ))),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundImage: NetworkImage(
-                            (snapshot.data! as dynamic)[index]['photoUrl']),
-                      ),
-                      title:
-                          Text((snapshot.data! as dynamic)[index]['username']),
+                          backgroundImage: NetworkImage(
+                        user.photoUrl,
+                      )),
+                      title: Text(user.username),
                     ),
                   );
                 });

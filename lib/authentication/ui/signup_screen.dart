@@ -3,14 +3,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:instagram_example/resources/auth_methods.dart';
-import 'package:instagram_example/responsive/mobile_screen_layout.dart';
-import 'package:instagram_example/responsive/resp_layout_screen.dart';
-import 'package:instagram_example/responsive/web_screen_layout.dart';
-import 'package:instagram_example/screens/login_screen.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/utils.dart';
-import 'package:instagram_example/widgets/text_input_field.dart';
+import 'package:instagram_example/authentication/widgets/text_input_field.dart';
+import 'package:provider/provider.dart';
+
+import '../../coordinate_layout/coordinate_layout.dart';
+import 'auth_provider.dart';
+import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -47,7 +47,7 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() {
       _isLoading = true;
     });
-    String res = await AuthMethods().signupUser(
+    String res = await Provider.of<AuthProvider>(context,listen: false).signupUser(
         email: _emailController.text,
         password: _passController.text,
         username: _usernameController.text,
@@ -57,9 +57,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (res == "Success") {
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-              builder: (context) => const ResponsiveLayout(
-                  mobileScreenLayout: MobileScreenLayout(),
-                  webScreenLayout: WebScreenLayout())),
+              builder: (context) => const CoordinateLayout()),
           (Route<dynamic> route) => false);
     } else {
       showSnackBar(context, res);

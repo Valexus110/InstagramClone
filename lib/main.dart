@@ -5,27 +5,26 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_example/providers/user_provider.dart';
-import 'package:instagram_example/responsive/mobile_screen_layout.dart';
-import 'package:instagram_example/responsive/resp_layout_screen.dart';
-import 'package:instagram_example/responsive/web_screen_layout.dart';
-import 'package:instagram_example/screens/login_screen.dart';
+import 'package:instagram_example/authentication/ui/auth_provider.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:provider/provider.dart';
 
+import 'authentication/ui/login_screen.dart';
+import 'coordinate_layout/coordinate_layout.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (kIsWeb) {
-    await Firebase.initializeApp(
-        options: const FirebaseOptions(
-            apiKey: "AIzaSyCm4_khkMDfZkZ5SbPQRMs8J1XjSixPCGY",
-            appId: "1:140328162940:web:7ac93922719e3aafcbdbf9",
-            messagingSenderId: "140328162940",
-            projectId: "instagram-clone-b9b4b",
-            storageBucket: "instagram-clone-b9b4b.appspot.com"));
-  } else {
+  // if (kIsWeb) {
+  //   await Firebase.initializeApp(
+  //       options: const FirebaseOptions(
+  //           apiKey: "AIzaSyCm4_khkMDfZkZ5SbPQRMs8J1XjSixPCGY",
+  //           appId: "1:140328162940:web:7ac93922719e3aafcbdbf9",
+  //           messagingSenderId: "140328162940",
+  //           projectId: "instagram-clone-b9b4b",
+  //           storageBucket: "instagram-clone-b9b4b.appspot.com"));
+  // } else {
     await Firebase.initializeApp();
-  }
+  // }
   runApp(const MyApp());
 }
 
@@ -65,9 +64,7 @@ class _MyAppState extends State<MyApp> {
         if (kDebugMode) {
           print("user is found");
         }
-        screen = const ResponsiveLayout(
-            mobileScreenLayout: MobileScreenLayout(),
-            webScreenLayout: WebScreenLayout());
+        screen = const CoordinateLayout();
         setState(() {
           _isLoading = false;
         });
@@ -103,7 +100,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => UserProvider()),
+          ChangeNotifierProvider(create: (_) => AuthProvider()),
         ],
         child: MaterialApp(
             debugShowCheckedModeBanner: false,
