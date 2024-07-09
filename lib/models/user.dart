@@ -28,8 +28,7 @@ class User {
         'photoUrl': photoUrl,
       };
 
-  static User fromJson(DocumentSnapshot snap) {
-    var snapshot = snap.data() as Map<String, dynamic>;
+  static User fromJson(Map<String, dynamic> snapshot) {
     return User(
       username: snapshot["username"],
       uid: snapshot["uid"],

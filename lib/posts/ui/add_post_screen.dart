@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:instagram_example/models/user.dart';
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
+import 'package:instagram_example/posts/ui/posts_controller.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:provider/provider.dart';
-
-import '../data/firestore_methods.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({Key? key}) : super(key: key);
@@ -21,6 +20,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   Uint8List? _file;
   final _descriptionController = TextEditingController();
   bool _isLoading = false;
+  final postsController = PostsController();
 
   void postImage(
     String uid,
@@ -31,7 +31,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
       _isLoading = true;
     });
     try {
-      String res = await FirestoreMethods().uploadPost(
+      String res = await postsController.uploadPost(
           _descriptionController.text, _file!, uid, username, profileImage);
       if (!mounted) return;
       if (res == "success") {

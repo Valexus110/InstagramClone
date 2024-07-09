@@ -7,9 +7,8 @@ class _SearchRepositoryImpl implements SearchRepository {
   _SearchRepositoryImpl(this.authProvider);
 
   @override
-  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>?> getUsers(
-      String currentName) async {
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> actualUsers = [];
+  Future<List<User>?> getUsers(String currentName) async {
+    List<User> actualUsers = [];
     if (currentName.isEmpty) return null;
     var users = await _firestore.collection('users').get();
     for (var user in users.docs) {
@@ -19,7 +18,7 @@ class _SearchRepositoryImpl implements SearchRepository {
           .toString()
           .toLowerCase()
           .contains(currentName.toLowerCase())) {
-        actualUsers.add(user);
+        actualUsers.add(User.fromJson(user.data()));
       }
     }
     return actualUsers;

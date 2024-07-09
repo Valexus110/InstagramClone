@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:instagram_example/profile/profile_screen.dart';
+import 'package:instagram_example/profile/ui/profile_screen.dart';
 import 'package:instagram_example/search/ui/search_controller.dart';
 import 'package:instagram_example/utils/colors.dart';
-import 'package:instagram_example/models/user.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -23,26 +22,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   void dispose() {
-    _controller.dispose();
     super.dispose();
+    _controller.dispose();
   }
-
-  // getUsers() async {
-  //   List<QueryDocumentSnapshot<Map<String, dynamic>>> actualUsers = [];
-  //   if (currName.isEmpty) return;
-  //   var users = await firestore.collection('users').get();
-  //   for (var user in users.docs) {
-  //     if (user.id == userId) continue;
-  //     if (user
-  //         .data()['username']
-  //         .toString()
-  //         .toLowerCase()
-  //         .contains(currName.toLowerCase())) {
-  //       actualUsers.add(user);
-  //     }
-  //   }
-  //   return actualUsers;
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +52,7 @@ class _SearchScreenState extends State<SearchScreen> {
               )),
         ),
         body: FutureBuilder(
-          future: _searchController.searchRepository.getUsers(currentName),
+          future: _searchController.getUsers(currentName),
           builder: (context, snapshot) {
             if (currentName.isEmpty) {
               return Container();
@@ -80,9 +62,9 @@ class _SearchScreenState extends State<SearchScreen> {
               );
             }
             return ListView.builder(
-                itemCount: (snapshot.data! as dynamic).length,
+                itemCount: snapshot.data!.length,
                 itemBuilder: (context, index) {
-                  var user = User.fromJson((snapshot.data! as dynamic)[index]);
+                  var user = snapshot.data![index];
                   return GestureDetector(
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => ProfileScreen(

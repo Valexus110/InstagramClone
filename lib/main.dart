@@ -14,17 +14,7 @@ import 'coordinate_layout/coordinate_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // if (kIsWeb) {
-  //   await Firebase.initializeApp(
-  //       options: const FirebaseOptions(
-  //           apiKey: "AIzaSyCm4_khkMDfZkZ5SbPQRMs8J1XjSixPCGY",
-  //           appId: "1:140328162940:web:7ac93922719e3aafcbdbf9",
-  //           messagingSenderId: "140328162940",
-  //           projectId: "instagram-clone-b9b4b",
-  //           storageBucket: "instagram-clone-b9b4b.appspot.com"));
-  // } else {
     await Firebase.initializeApp();
-  // }
   runApp(const MyApp());
 }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_example/models/comment.dart';
 import 'package:intl/intl.dart';
 
 class CommentCard extends StatefulWidget {
-  final Map<String, dynamic> snap;
+  final Comment snap;
 
   const CommentCard({Key? key, required this.snap}) : super(key: key);
 
@@ -19,7 +20,7 @@ class CommentCardState extends State<CommentCard> {
         children: [
           CircleAvatar(
             backgroundImage: NetworkImage(
-              widget.snap['profilePic'],
+              widget.snap.profilePic,
             ),
             radius: 18,
           ),
@@ -33,18 +34,18 @@ class CommentCardState extends State<CommentCard> {
                   RichText(
                       text: TextSpan(children: [
                     TextSpan(
-                      text: widget.snap['name'],
+                      text: widget.snap.name,//['name'],
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
-                      text: ' ${widget.snap['text']}',
+                      text: ' ${widget.snap.text}', //['text']}',
                     )
                   ])),
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       DateFormat.yMMMd().format(
-                        widget.snap['datePublished'].toDate(),
+                        widget.snap.datePublished,//['datePublished'].toDate(),
                       ),
                       style: const TextStyle(
                           fontSize: 12, fontWeight: FontWeight.w400),

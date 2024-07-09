@@ -1,30 +1,30 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_example/comments/ui/comment_controller.dart';
+import 'package:instagram_example/models/comment.dart';
 import 'package:instagram_example/utils/colors.dart';
-import 'package:instagram_example/widgets/comment_card.dart';
+import 'package:instagram_example/comments/widgets/comment_card.dart';
 import 'package:instagram_example/models/user.dart';
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
 import 'package:provider/provider.dart';
-
-import '../data/firestore_methods.dart';
-import '../utils/utils.dart';
+import '../../utils/utils.dart';
 
 class CommentsScreen extends StatefulWidget {
-  final Map<String, dynamic>? snap;
+  final String postId;
 
-  const CommentsScreen({Key? key, required this.snap}) : super(key: key);
+  const CommentsScreen({Key? key, required this.postId}) : super(key: key);
 
   @override
   CommentsScreenState createState() => CommentsScreenState();
 }
 
 class CommentsScreenState extends State<CommentsScreen> {
-  final TextEditingController _commentController = TextEditingController();
+  final TextEditingController _commentTextController = TextEditingController();
+  final CommentController _commentController = CommentController();
 
   @override
   void dispose() {
     super.dispose();
-    _commentController.dispose();
+    _commentTextController.dispose();
   }
 
   @override
@@ -37,23 +37,17 @@ class CommentsScreenState extends State<CommentsScreen> {
         centerTitle: false,
       ),
       body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('posts')
-              .doc(widget.snap?['postId'])
-              .collection('comments')
-              .orderBy('datePublished', descending: false)
-              .snapshots(),
-          builder: (context,
-              AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+          stream: _commentController.getListOfComments(widget.postId),
+          builder: (context, AsyncSnapshot<List<Comment>> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
                 child: CircularProgressIndicator(),
               );
             }
             return ListView.builder(
-                itemCount: snapshot.data!.docs.length,
+                itemCount: snapshot.data!.length,
                 itemBuilder: (context, index) => CommentCard(
-                      snap: snapshot.data!.docs[index].data(),
+                      snap: snapshot.data![index],
                     ));
           }),
       bottomNavigationBar: SafeArea(
@@ -72,7 +66,7 @@ class CommentsScreenState extends State<CommentsScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16.0, right: 8),
                   child: TextField(
-                    controller: _commentController,
+                    controller: _commentTextController,
                     decoration: InputDecoration(
                       hintText: 'Comment as ${user.username}',
                       border: InputBorder.none,
@@ -82,17 +76,16 @@ class CommentsScreenState extends State<CommentsScreen> {
               ),
               GestureDetector(
                 onTap: () async {
-                  var message = await FirestoreMethods().postComment(
-                      context,
-                      widget.snap?['postId'],
-                      _commentController.text,
+                  var message = await _commentController.postComment(
+                      widget.postId,
+                      _commentTextController.text,
                       user.uid,
                       user.username,
                       user.photoUrl);
-                  if(!context.mounted) return;
+                  if (!context.mounted) return;
                   if (message != 'Ok') showSnackBar(context, message);
                   setState(() {
-                    _commentController.text = "";
+                    _commentTextController.text = "";
                   });
                 },
                 child: Container(

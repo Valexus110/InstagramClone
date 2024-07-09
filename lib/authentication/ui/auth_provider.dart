@@ -14,8 +14,8 @@ class AuthProvider extends ChangeNotifier {
   model.User get getUser => _user!;
   final _authRepository = _AuthRepositoryImpl();
 
-  getUserId() {
-    _authRepository.getUser();
+  String getUserId() {
+   return _authRepository.getUser();
   }
 
   Future<void> refreshUser() async {

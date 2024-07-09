@@ -1,12 +1,15 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_example/profile/profile_screen.dart';
+import 'package:instagram_example/profile/ui/profile_screen.dart';
+import 'package:instagram_example/users_recommendation/ui/recommendation_controller.dart';
 import 'package:instagram_example/utils/utils.dart';
-import 'package:instagram_example/widgets/follow_button.dart';
+import 'package:provider/provider.dart';
 
-import '../data/firestore_methods.dart';
+import '../../authentication/ui/auth_provider.dart';
+import '../../common/common_controller.dart';
+import '../../common/widgets/follow_button.dart';
+
+import 'package:instagram_example/models/user.dart' as model;
 
 class UserListScreen extends StatefulWidget {
   final String? userId;
@@ -29,13 +32,16 @@ class UserListScreenState extends State<UserListScreen> {
   var followers = [];
   var following = [];
 
-//  var userPhotos = [];
-  var userInfo = [];
+  var userInfo = <model.User>[];
+  final _commonController = CommonController();
+  final _recommendationController = RecommendationController();
+  late final String currentUid;
 
   @override
   void initState() {
-    getData();
     super.initState();
+    currentUid = Provider.of<AuthProvider>(context, listen: false).getUserId();
+    getData();
   }
 
   getData() async {
@@ -43,7 +49,7 @@ class UserListScreenState extends State<UserListScreen> {
       isLoading = true;
     });
     try {
-      var currUid = widget.userId ?? FirebaseAuth.instance.currentUser!.uid;
+      var currUid = widget.userId ?? currentUid;
       await getUsersInfo(currUid);
     } catch (e) {
       if (kDebugMode) {
@@ -57,36 +63,20 @@ class UserListScreenState extends State<UserListScreen> {
   }
 
   getUsersInfo(String currUid) async {
-    var user = await FirebaseFirestore.instance.collection('users').get();
-    var userSnap =
-        await FirebaseFirestore.instance.collection('users').doc(currUid).get();
-    followers = userSnap.data()!['followers'];
-    following = userSnap.data()!['following'];
-    userInfo.clear();
-    Map<String, dynamic>? userData;
-    for (var e in user.docs) {
-      if (widget.isFollowers == null) {
-        if (!followers.contains(e.id) &&
-            !following.contains(e.id) &&
-            e.id != currUid) {
-          userData = e.data();
-        }
-      } else if (widget.isFollowers != null && widget.isFollowers == true) {
-        if (followers.contains(e.id)) {
-          userData = e.data();
-        }
-      } else if (widget.isFollowers != null && widget.isFollowers == false) {
-        if (following.contains(e.id)) {
-          userData = e.data();
-        }
-      }
-      if (userData != null) {
-        setState(() {
-          userInfo.add(userData);
-        });
-        userData = null;
-      }
-    }
+    var userSnap = model.User.fromJson(
+        await _recommendationController.getFollowed(currUid));
+    if (!mounted) return;
+    setState(() {
+      followers = userSnap.followers;
+      following = userSnap.following;
+    });
+    var userData = await _recommendationController.getUserInfo(
+        widget.isFollowers, currUid, following, followers);
+    if (!mounted) return;
+    setState(() {
+      userInfo.clear();
+      userInfo = userData;
+    });
   }
 
   @override
@@ -112,19 +102,18 @@ class UserListScreenState extends State<UserListScreen> {
                         const SizedBox(height: 20),
                         Row(
                           mainAxisSize: MainAxisSize.max,
-                          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             InkWell(
                               onTap: () => Navigator.of(context)
                                   .push(MaterialPageRoute(
-                                      builder: (context) => ProfileScreen(
-                                          uid: userInfo[i]['uid'])))
+                                      builder: (context) =>
+                                          ProfileScreen(uid: userInfo[i].uid)))
                                   .then((value) async => await getData()),
                               splashFactory: NoSplash.splashFactory,
                               child: CircleAvatar(
                                 backgroundColor: Colors.grey,
                                 backgroundImage:
-                                    NetworkImage(userInfo[i]['photoUrl']),
+                                    NetworkImage(userInfo[i].photoUrl),
                                 radius: 30,
                               ),
                             ),
@@ -135,7 +124,7 @@ class UserListScreenState extends State<UserListScreen> {
                                     padding: const EdgeInsets.only(
                                         left: 16.0, right: 8),
                                     child: Text(
-                                      userInfo[i]['username'],
+                                      userInfo[i].username,
                                       style: const TextStyle(fontSize: 20),
                                     ),
                                   ),
@@ -143,7 +132,7 @@ class UserListScreenState extends State<UserListScreen> {
                                     padding: const EdgeInsets.only(
                                         left: 16.0, right: 8),
                                     child: Text(
-                                      userInfo[i]['email'],
+                                      userInfo[i].email,
                                       style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
@@ -155,11 +144,9 @@ class UserListScreenState extends State<UserListScreen> {
                                       setState(() {
                                         isLoading = true;
                                       });
-                                      await FirestoreMethods().followUser(
-                                          FirebaseAuth
-                                              .instance.currentUser!.uid,
-                                          userInfo[i]['uid']);
-                                      var name = userInfo[i]['username'];
+                                      await _commonController.followUser(
+                                          currentUid, userInfo[i].uid);
+                                      var name = userInfo[i].username;
                                       userInfo.removeAt(i);
                                       if (!context.mounted) return;
                                       showSnackBar(context,

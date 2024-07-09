@@ -1,17 +1,17 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
-import 'package:instagram_example/profile/saved_posts_screen.dart';
-import 'package:instagram_example/profile/user_list_screen.dart';
+import 'package:instagram_example/common/common_controller.dart';
+import 'package:instagram_example/posts/ui/saved_posts_screen.dart';
+import 'package:instagram_example/profile/ui/profile_controller.dart';
+import 'package:instagram_example/users_recommendation/ui/user_list_screen.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/utils.dart';
-import 'package:instagram_example/widgets/follow_button.dart';
 import 'package:provider/provider.dart';
 import 'package:instagram_example/models/user.dart' as model;
 
-import '../authentication/ui/login_screen.dart';
-import '../data/firestore_methods.dart';
+import '../../authentication/ui/login_screen.dart';
+import '../../common/widgets/follow_button.dart';
+import '../../models/post.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -30,10 +30,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int following = 0;
   bool isFollowing = false;
   bool isLoading = false;
+  final _commonController = CommonController();
+  final _profileController = ProfileController();
+  late final String currentUid;
 
   @override
   void initState() {
     super.initState();
+    currentUid = Provider.of<AuthProvider>(context, listen: false).getUserId();
     getData();
   }
 
@@ -48,21 +52,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isLoading = true;
     });
     try {
-      userData = model.User.fromJson(await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.uid)
-          .get());
-      var postSnap = await FirebaseFirestore.instance
-          .collection('posts')
-          .where('uid', isEqualTo: widget.uid)
-          .get();
+      userData = await _profileController.getUserInfo(widget.uid);
+      postLen = await _profileController.getPostInfo(widget.uid);
       if (!mounted) return;
-      postLen = postSnap.docs.length;
-      // userData = userSnap.data()!;
       followers = userData.followers.length;
       following = userData.followers.length;
-      isFollowing =
-          userData.followers.contains(FirebaseAuth.instance.currentUser!.uid);
+      isFollowing = userData.followers.contains(currentUid);
       setState(() {
         isLoading = true;
       });
@@ -135,9 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    (widget.uid ==
-                                            FirebaseAuth
-                                                .instance.currentUser!.uid)
+                                    (widget.uid == currentUid)
                                         ? FollowButton(
                                             func: () async {
                                               await Provider.of<AuthProvider>(
@@ -157,11 +150,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         : isFollowing
                                             ? FollowButton(
                                                 func: () async {
-                                                  await FirestoreMethods()
-                                                      .followUser(
-                                                          FirebaseAuth.instance
-                                                              .currentUser!.uid,
-                                                          userData.uid);
+                                                  _commonController.followUser(
+                                                      currentUid, userData.uid);
                                                   setState(() {
                                                     isFollowing = false;
                                                     followers--;
@@ -173,10 +163,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               )
                                             : FollowButton(
                                                 func: () async {
-                                                  await FirestoreMethods()
-                                                      .followUser(
-                                                          FirebaseAuth.instance
-                                                              .currentUser!.uid,
+                                                  await _commonController
+                                                      .followUser(currentUid,
                                                           userData.uid);
                                                   setState(() {
                                                     isFollowing = true;
@@ -208,10 +196,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.only(top: 10),
                         child: TextButton(
-                          onPressed: FirebaseAuth.instance.currentUser!.uid !=
-                                  widget.uid
-                              ? null
-                              : changeBio,
+                          onPressed:
+                              currentUid != widget.uid ? null : changeBio,
                           child: Text(userData.bio,
                               style: const TextStyle(
                                   fontSize: 15, color: Colors.white)),
@@ -222,17 +208,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const Divider(),
                 FutureBuilder(
-                    future: FirebaseFirestore.instance
-                        .collection('posts')
-                        .where('uid', isEqualTo: widget.uid)
-                        .get(),
+                    future: _profileController.getUserPosts(widget.uid),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
                       return GridView.builder(
                           shrinkWrap: true,
-                          itemCount: (snapshot.data! as dynamic).docs.length,
+                          itemCount: snapshot.data!.length,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 3,
@@ -240,10 +223,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   mainAxisSpacing: 1.5,
                                   childAspectRatio: 1),
                           itemBuilder: (context, index) {
-                            DocumentSnapshot snap =
-                                (snapshot.data! as dynamic).docs[index];
+                            Post snap = snapshot.data![index];
                             return Image(
-                              image: NetworkImage(snap['postUrl']),
+                              image: NetworkImage(snap.postUrl),
                               fit: BoxFit.cover,
                             );
                           });
@@ -270,8 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             onSubmitted: (newBio) {
               setState(() {
-                FirestoreMethods()
-                    .changeBio(FirebaseAuth.instance.currentUser!.uid, newBio);
+                _profileController.changeBio(currentUid, newBio);
                 getData();
                 Navigator.pop(context);
               });

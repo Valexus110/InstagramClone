@@ -3,14 +3,14 @@ part of '../ui/auth_provider.dart';
 class _AuthRepositoryImpl implements AuthRepository {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final storageRepository = StorageController().storageRepository;
+  final storageRepository = StorageController();
 
   @override
   Future<model.User> getUserDetails() async {
     auth.User currentUser = _auth.currentUser!;
     DocumentSnapshot snap =
         await _firestore.collection('users').doc(currentUser.uid).get();
-    return model.User.fromJson(snap);
+    return model.User.fromJson(snap.data() as Map<String, dynamic>);
   }
 
   @override
@@ -90,7 +90,7 @@ class _AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  getUser() {
+  String getUser() {
     return _auth.currentUser!.uid;
   }
 }

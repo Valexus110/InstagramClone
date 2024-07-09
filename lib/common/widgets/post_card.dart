@@ -1,22 +1,21 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_example/comments/ui/comment_controller.dart';
 import 'package:instagram_example/models/user.dart' as model;
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
-import 'package:instagram_example/comments/comments_screen.dart';
+import 'package:instagram_example/comments/ui/comments_screen.dart';
+import 'package:instagram_example/posts/ui/posts_controller.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/global_variables.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-import '../data/firestore_methods.dart';
-import '../profile/profile_screen.dart';
+import '../../models/post.dart';
+import '../../profile/ui/profile_screen.dart';
 import 'like_animation.dart';
 
 class PostCard extends StatefulWidget {
-  final Map<String, dynamic> snap;
+  final Post snap;
   final bool savedScreen;
 
   const PostCard({Key? key, required this.snap, this.savedScreen = false})
@@ -30,23 +29,22 @@ class PostCardState extends State<PostCard> {
   bool isLikeAnimating = false;
   int commentLen = 0;
   bool saved = false;
+  final postsController = PostsController();
+  final _commentController = CommentController();
+  late final AuthProvider authProvider;
 
   @override
   void initState() {
     super.initState();
+    authProvider = Provider.of(context, listen: false);
     getComments();
     getSaved();
   }
 
   void getSaved() async {
     try {
-      var snap = await FirebaseFirestore.instance
-          .collection('savedPosts')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .collection('posts')
-          .doc(widget.snap['postId'])
-          .get();
-      if (snap.data() != null) {
+      var snap = await postsController.getIsPostSaved(widget.snap.postId);
+      if (snap != null) {
         saved = true;
       }
     } catch (e) {
@@ -58,13 +56,10 @@ class PostCardState extends State<PostCard> {
 
   void getComments() async {
     try {
-      QuerySnapshot snap = await FirebaseFirestore.instance
-          .collection('posts')
-          .doc(widget.snap['postId'])
-          .collection('comments')
-          .get();
+      var length =
+          await _commentController.getCommentsCount(widget.snap.postId);
       setState(() {
-        commentLen = snap.docs.length;
+        commentLen = length;
       });
       if (!mounted) return;
     } catch (e) {
@@ -75,7 +70,7 @@ class PostCardState extends State<PostCard> {
 
   Future<void> addBookmark(String postId, String uid) async {
     String message = "";
-    await FirestoreMethods().addBookmark(postId, uid, saved);
+    await postsController.addBookmark(postId, uid, saved);
     if (saved) {
       message = "Removed from Favourite Posts";
     } else {
@@ -106,14 +101,13 @@ class PostCardState extends State<PostCard> {
                   .copyWith(right: 0),
               child: GestureDetector(
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        ProfileScreen(uid: widget.snap['uid']))),
+                    builder: (context) => ProfileScreen(uid: widget.snap.uid))),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 16,
                       backgroundImage: NetworkImage(
-                        widget.snap["profileImage"],
+                        widget.snap.profileImage,
                       ),
                     ),
                     Expanded(
@@ -124,7 +118,7 @@ class PostCardState extends State<PostCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.snap["username"],
+                            widget.snap.username,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -133,8 +127,7 @@ class PostCardState extends State<PostCard> {
                         ],
                       ),
                     )),
-                    if (FirebaseAuth.instance.currentUser!.uid ==
-                        widget.snap['uid'])
+                    if (authProvider.getUserId() == widget.snap.uid)
                       IconButton(
                           onPressed: () {
                             showDialog(
@@ -149,10 +142,12 @@ class PostCardState extends State<PostCard> {
                                           ]
                                               .map((e) => GestureDetector(
                                                     onTap: () async {
-                                                      await FirestoreMethods()
+                                                      await postsController
                                                           .deletePost(widget
-                                                              .snap['postId']);
-                                                      if (!context.mounted) return;
+                                                              .snap.postId);
+                                                      if (!context.mounted) {
+                                                        return;
+                                                      }
                                                       Navigator.of(context)
                                                           .pop();
                                                     },
@@ -175,10 +170,10 @@ class PostCardState extends State<PostCard> {
             ),
             GestureDetector(
               onDoubleTap: () async {
-                await FirestoreMethods().likePost(
-                  widget.snap['postId'],
+                await postsController.likePost(
+                  widget.snap.postId,
                   user.uid,
-                  widget.snap['likes'],
+                  widget.snap.likes,
                 );
                 setState(() {
                   isLikeAnimating = true;
@@ -191,7 +186,7 @@ class PostCardState extends State<PostCard> {
                     height: MediaQuery.of(context).size.height * 0.35,
                     width: double.infinity,
                     child: Image.network(
-                      widget.snap["postUrl"],
+                      widget.snap.postUrl,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -218,18 +213,18 @@ class PostCardState extends State<PostCard> {
             Row(
               children: [
                 LikeAnimation(
-                  isAnimating: widget.snap['likes'].contains(user.uid),
+                  isAnimating: widget.snap.likes.contains(user.uid),
                   smallLike: true,
                   onEnd: () {},
                   child: IconButton(
                     onPressed: () async {
-                      await FirestoreMethods().likePost(
-                        widget.snap['postId'],
+                      await postsController.likePost(
+                        widget.snap.postId,
                         user.uid,
-                        widget.snap['likes'],
+                        widget.snap.likes,
                       );
                     },
-                    icon: widget.snap['likes'].contains(user.uid)
+                    icon: widget.snap.likes.contains(user.uid)
                         ? const Icon(
                             Icons.favorite,
                             color: Colors.red,
@@ -241,7 +236,7 @@ class PostCardState extends State<PostCard> {
                     onPressed: () =>
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => CommentsScreen(
-                                  snap: widget.snap,
+                                  postId: widget.snap.postId,
                                 ))),
                     icon: const Icon(
                       Icons.comment_outlined,
@@ -260,7 +255,7 @@ class PostCardState extends State<PostCard> {
                       onEnd: () {},
                       child: IconButton(
                         onPressed: () async {
-                          await addBookmark(widget.snap['postId'], user.uid);
+                          await addBookmark(widget.snap.postId, user.uid);
                           if (!mounted) return;
                           setState(() {
                             saved = !saved;
@@ -290,7 +285,7 @@ class PostCardState extends State<PostCard> {
                         .titleSmall!
                         .copyWith(fontWeight: FontWeight.w800),
                     child: Text(
-                      '${widget.snap["likes"].length} likes',
+                      '${widget.snap.likes.length} likes',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
@@ -306,11 +301,11 @@ class PostCardState extends State<PostCard> {
                         ),
                         children: [
                           TextSpan(
-                            text: widget.snap["username"],
+                            text: widget.snap.username,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           TextSpan(
-                            text: ' ${widget.snap["description"]}',
+                            text: ' ${widget.snap.description}',
                           )
                         ],
                       ),
@@ -329,7 +324,7 @@ class PostCardState extends State<PostCard> {
                         onPressed: () => Navigator.of(context)
                             .push(MaterialPageRoute(
                                 builder: (context) => CommentsScreen(
-                                      snap: widget.snap,
+                                      postId: widget.snap.postId,
                                     )))
                             .then((value) => getComments()),
                       ),
@@ -338,8 +333,7 @@ class PostCardState extends State<PostCard> {
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                      DateFormat.yMMMd()
-                          .format(widget.snap["datePublished"].toDate()),
+                      DateFormat.yMMMd().format(widget.snap.datePublished),
                       style: const TextStyle(
                         fontSize: 16,
                         color: secondaryColor,
