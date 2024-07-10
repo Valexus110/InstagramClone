@@ -108,7 +108,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<AuthProvider>(context).getUser;
+    final User user = Provider.of<AuthProvider>(context).getUser!;
 
     return _file == null
         ? Center(

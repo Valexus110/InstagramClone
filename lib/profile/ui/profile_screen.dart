@@ -14,9 +14,10 @@ import '../../common/widgets/follow_button.dart';
 import '../../models/post.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String uid;
+  final GlobalKey? scaffoldKey;
+  final String? uid;
 
-  const ProfileScreen({Key? key, required this.uid}) : super(key: key);
+  const ProfileScreen({Key? key, this.uid, this.scaffoldKey}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ProfileScreenState();
@@ -30,14 +31,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int following = 0;
   bool isFollowing = false;
   bool isLoading = false;
+  bool isLoadingExit = false;
   final _commonController = CommonController();
   final _profileController = ProfileController();
-  late final String currentUid;
+  AuthProvider authProvider = AuthProvider();
+  late String userUid;
+  late String currentUid;
 
   @override
   void initState() {
     super.initState();
-    currentUid = Provider.of<AuthProvider>(context, listen: false).getUserId();
+    userUid = Provider.of<AuthProvider>(context, listen: false).getUserId();
     getData();
   }
 
@@ -49,15 +53,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   getData() async {
     setState(() {
+      if (widget.uid == null) {
+        currentUid = userUid;
+      } else {
+        currentUid = widget.uid!;
+      }
       isLoading = true;
     });
     try {
-      userData = await _profileController.getUserInfo(widget.uid);
-      postLen = await _profileController.getPostInfo(widget.uid);
+      userData = await _profileController.getUserInfo(currentUid);
+      postLen = await _profileController.getPostInfo(currentUid);
       if (!mounted) return;
       followers = userData.followers.length;
-      following = userData.followers.length;
-      isFollowing = userData.followers.contains(currentUid);
+      following = userData.following.length;
+      isFollowing = userData.followers.contains(userUid);
       setState(() {
         isLoading = true;
       });
@@ -72,9 +81,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     _editingController = TextEditingController();
+    authProvider = Provider.of(context);
+    // currentUid = authProvider.getUserId();
+    // currentUid = Provider.of<AuthProvider>(context).getUser!.uid;
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
+            key: widget.scaffoldKey,
             appBar: AppBar(
               backgroundColor: mobileBackgroundColor,
               title: Text(
@@ -90,147 +103,161 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.popUntil(context, (route) => route.isFirst);
                     },
                     icon: const Icon(Icons.home)),
-                IconButton(
-                    onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const SavedPostsScreen()));
-                    },
-                    icon: const Icon(Icons.star)),
+                userUid == currentUid
+                    ? IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const SavedPostsScreen()));
+                        },
+                        icon: const Icon(Icons.star))
+                    : Container()
               ],
               centerTitle: false,
             ),
-            body: ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.grey,
-                            backgroundImage: NetworkImage(userData.photoUrl),
-                            radius: 40,
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    buildStartColumn(postLen, "Posts"),
-                                    buildStartColumn(followers, "Followers"),
-                                    buildStartColumn(following, "Following"),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    (widget.uid == currentUid)
-                                        ? FollowButton(
-                                            func: () async {
-                                              await Provider.of<AuthProvider>(
-                                                      context,
-                                                      listen: false)
-                                                  .signOut();
-                                              if (!context.mounted) return;
-                                              Navigator.of(context).pushReplacement(
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const LoginScreen()));
-                                            },
-                                            text: 'Sign Out',
-                                            isFollow: false,
-                                            divider: 2,
-                                          )
-                                        : isFollowing
-                                            ? FollowButton(
-                                                func: () async {
-                                                  _commonController.followUser(
-                                                      currentUid, userData.uid);
-                                                  setState(() {
-                                                    isFollowing = false;
-                                                    followers--;
-                                                  });
-                                                },
-                                                text: 'Unfollow',
-                                                isFollow: false,
-                                                divider: 2,
-                                              )
-                                            : FollowButton(
-                                                func: () async {
-                                                  await _commonController
-                                                      .followUser(currentUid,
-                                                          userData.uid);
-                                                  setState(() {
-                                                    isFollowing = true;
-                                                    followers++;
-                                                  });
-                                                },
-                                                text: 'Follow',
-                                                isFollow: true,
-                                                divider: 2,
-                                              )
-                                  ],
-                                ),
-                              ],
+            body: RefreshIndicator.adaptive(
+              onRefresh: () async {
+                await getData();
+              },
+              child: ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.grey,
+                              backgroundImage: NetworkImage(userData.photoUrl),
+                              radius: 40,
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      buildStartColumn(postLen, "Posts"),
+                                      buildStartColumn(followers, "Followers"),
+                                      buildStartColumn(following, "Following"),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      (userUid == currentUid)
+                                          ? FollowButton(
+                                              func: () async {
+                                                setState(() {
+                                                  isLoadingExit = true;
+                                                });
+                                                await Future.delayed(
+                                                    const Duration(
+                                                        milliseconds: 500));
+                                                await authProvider.signOut();
+                                                if (!context.mounted) return;
+                                                Navigator.of(context)
+                                                    .pushReplacement(
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const LoginScreen()));
+                                              },
+                                              text: 'Sign Out',
+                                              isExit: isLoadingExit,
+                                              isFollow: false,
+                                              divider: 2,
+                                            )
+                                          : isFollowing
+                                              ? FollowButton(
+                                                  func: () async {
+                                                    _commonController
+                                                        .followUser(userUid,
+                                                            currentUid);
+                                                    setState(() {
+                                                      isFollowing = false;
+                                                      followers--;
+                                                    });
+                                                  },
+                                                  text: 'Unfollow',
+                                                  isFollow: false,
+                                                  divider: 2,
+                                                )
+                                              : FollowButton(
+                                                  func: () async {
+                                                    await _commonController
+                                                        .followUser(userUid,
+                                                            currentUid);
+                                                    setState(() {
+                                                      isFollowing = true;
+                                                      followers++;
+                                                    });
+                                                  },
+                                                  text: 'Follow',
+                                                  isFollow: true,
+                                                  divider: 2,
+                                                )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(top: 15),
+                          child: Text(
+                            userData.email,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
-                      ),
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(top: 15),
-                        child: Text(
-                          userData.email,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                        ),
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(top: 10),
+                          child: TextButton(
+                            onPressed: currentUid != userUid ? null : changeBio,
+                            child: Text(userData.bio,
+                                style: const TextStyle(
+                                    fontSize: 15, color: Colors.white)),
                           ),
                         ),
-                      ),
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(top: 10),
-                        child: TextButton(
-                          onPressed:
-                              currentUid != widget.uid ? null : changeBio,
-                          child: Text(userData.bio,
-                              style: const TextStyle(
-                                  fontSize: 15, color: Colors.white)),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const Divider(),
-                FutureBuilder(
-                    future: _profileController.getUserPosts(widget.uid),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      return GridView.builder(
-                          shrinkWrap: true,
-                          itemCount: snapshot.data!.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  crossAxisSpacing: 5,
-                                  mainAxisSpacing: 1.5,
-                                  childAspectRatio: 1),
-                          itemBuilder: (context, index) {
-                            Post snap = snapshot.data![index];
-                            return Image(
-                              image: NetworkImage(snap.postUrl),
-                              fit: BoxFit.cover,
-                            );
-                          });
-                    }),
-              ],
+                  const Divider(),
+                  FutureBuilder(
+                      future: _profileController.getUserPosts(currentUid),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        return GridView.builder(
+                            shrinkWrap: true,
+                            itemCount: snapshot.data!.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 5,
+                                    mainAxisSpacing: 1.5,
+                                    childAspectRatio: 1),
+                            itemBuilder: (context, index) {
+                              Post snap = snapshot.data![index];
+                              return Image(
+                                image: NetworkImage(snap.postUrl),
+                                fit: BoxFit.cover,
+                              );
+                            });
+                      }),
+                ],
+              ),
             ),
           );
   }
@@ -252,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             onSubmitted: (newBio) {
               setState(() {
-                _profileController.changeBio(currentUid, newBio);
+                _profileController.changeBio(userUid, newBio);
                 getData();
                 Navigator.pop(context);
               });
@@ -271,7 +298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (label != "Posts" && num > 0)
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) => UserListScreen(
-                  userId: widget.uid,
+                  userId: currentUid,
                   title: label,
                   isFollowers: label == "Followers")))
       },

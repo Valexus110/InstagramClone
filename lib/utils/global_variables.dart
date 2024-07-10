@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_example/users_recommendation/ui/user_list_screen.dart';
 import 'package:instagram_example/feed/ui/feed_screen.dart';
@@ -14,7 +13,5 @@ List<Widget> homeScreenItems = [
   const SearchScreen(),
   const AddPostScreen(),
   const UserListScreen(),
-  ProfileScreen(
-    uid: FirebaseAuth.instance.currentUser!.uid,
-  ),
+  const ProfileScreen(),
 ];

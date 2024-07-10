@@ -1,3 +1,4 @@
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_example/comments/ui/comment_controller.dart';
@@ -82,26 +83,34 @@ class PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    final model.User user = Provider.of<AuthProvider>(context).getUser;
-    final width = MediaQuery.of(context).size.width;
+    final model.User user = Provider
+        .of<AuthProvider>(context)
+        .getUser!;
+    final width = MediaQuery
+        .of(context)
+        .size
+        .width;
     return Container(
         decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color:
-                width > webScreenSize ? secondaryColor : mobileBackgroundColor,
+            width > webScreenSize ? secondaryColor : borderBackgroundColor,
           ),
-          color: mobileBackgroundColor,
+          color: borderBackgroundColor,
         ),
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: //(FirebaseAuth.instance.currentUser!.uid != widget.snap['uid']) ?
-            Column(
+        Column(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16)
-                  .copyWith(right: 0),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 8).copyWith(right: 0),
               child: GestureDetector(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => ProfileScreen(uid: widget.snap.uid))),
+                onTap: () =>
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) =>
+                            ProfileScreen(uid: widget.snap.uid))),
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -112,27 +121,28 @@ class PostCardState extends State<PostCard> {
                     ),
                     Expanded(
                         child: Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.snap.username,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.snap.username,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    )),
+                        )),
                     if (authProvider.getUserId() == widget.snap.uid)
                       IconButton(
                           onPressed: () {
                             showDialog(
                                 context: context,
-                                builder: (context) => Dialog(
+                                builder: (context) =>
+                                    Dialog(
                                       child: ListView(
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 16),
@@ -140,26 +150,27 @@ class PostCardState extends State<PostCard> {
                                           children: [
                                             'Delete Post',
                                           ]
-                                              .map((e) => GestureDetector(
-                                                    onTap: () async {
-                                                      await postsController
-                                                          .deletePost(widget
-                                                              .snap.postId);
-                                                      if (!context.mounted) {
-                                                        return;
-                                                      }
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                    child: Container(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                        vertical: 12,
-                                                        horizontal: 16,
-                                                      ),
-                                                      child: Text(e),
-                                                    ),
-                                                  ))
+                                              .map((e) =>
+                                              GestureDetector(
+                                                onTap: () async {
+                                                  await postsController
+                                                      .deletePost(widget
+                                                      .snap.postId);
+                                                  if (!context.mounted) {
+                                                    return;
+                                                  }
+                                                  Navigator.of(context)
+                                                      .pop();
+                                                },
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    vertical: 12,
+                                                    horizontal: 16,
+                                                  ),
+                                                  child: Text(e),
+                                                ),
+                                              ))
                                               .toList()),
                                     ));
                           },
@@ -183,11 +194,11 @@ class PostCardState extends State<PostCard> {
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.35,
+                    // height: MediaQuery.of(context).size.height * 0.35,
                     width: double.infinity,
                     child: Image.network(
                       widget.snap.postUrl,
-                      fit: BoxFit.cover,
+                      scale: 0.5,
                     ),
                   ),
                   AnimatedOpacity(
@@ -226,16 +237,17 @@ class PostCardState extends State<PostCard> {
                     },
                     icon: widget.snap.likes.contains(user.uid)
                         ? const Icon(
-                            Icons.favorite,
-                            color: Colors.red,
-                          )
+                      Icons.favorite,
+                      color: Colors.red,
+                    )
                         : const Icon(Icons.favorite_border),
                   ),
                 ),
                 IconButton(
                     onPressed: () =>
                         Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => CommentsScreen(
+                            builder: (context) =>
+                                CommentsScreen(
                                   postId: widget.snap.postId,
                                 ))),
                     icon: const Icon(
@@ -263,9 +275,9 @@ class PostCardState extends State<PostCard> {
                         },
                         icon: saved || widget.savedScreen
                             ? const Icon(
-                                Icons.bookmark,
-                                color: Colors.white70,
-                              )
+                          Icons.bookmark,
+                          color: Colors.white70,
+                        )
                             : const Icon(Icons.bookmark_border),
                       ),
                     ),
@@ -280,13 +292,17 @@ class PostCardState extends State<PostCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DefaultTextStyle(
-                    style: Theme.of(context)
+                    style: Theme
+                        .of(context)
                         .textTheme
                         .titleSmall!
                         .copyWith(fontWeight: FontWeight.w800),
                     child: Text(
                       '${widget.snap.likes.length} likes',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .bodyMedium,
                     ),
                   ),
                   Container(
@@ -302,41 +318,50 @@ class PostCardState extends State<PostCard> {
                         children: [
                           TextSpan(
                             text: widget.snap.username,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold),
                           ),
                           TextSpan(
                             text: ' ${widget.snap.description}',
+                            style: const TextStyle(fontSize: 12),
                           )
                         ],
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
+                  Container(
+                    constraints: BoxConstraints(
+                        maxWidth: MediaQuery
+                            .sizeOf(context)
+                            .width,
+                        maxHeight: 36),
+                    child: GestureDetector(
+                      onTap: () {},
                       child: TextButton(
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
                         child: Text("View all $commentLen comments",
                             style: const TextStyle(
-                              fontSize: 16,
-                              color: secondaryColor,
+                              fontSize: 14,
+                              color: Colors.white60,
                             )),
-                        onPressed: () => Navigator.of(context)
-                            .push(MaterialPageRoute(
-                                builder: (context) => CommentsScreen(
+                        onPressed: () =>
+                            Navigator.of(context)
+                                .push(MaterialPageRoute(
+                                builder: (context) =>
+                                    CommentsScreen(
                                       postId: widget.snap.postId,
                                     )))
-                            .then((value) => getComments()),
+                                .then((value) => getComments()),
                       ),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                  Padding(
+                    padding: const EdgeInsets.all(0.0),
                     child: Text(
                       DateFormat.yMMMd().format(widget.snap.datePublished),
                       style: const TextStyle(
-                        fontSize: 16,
-                        color: secondaryColor,
+                        fontSize: 12,
+                        color: Colors.white60,
                       ),
                     ),
                   ),
@@ -345,7 +370,7 @@ class PostCardState extends State<PostCard> {
             ),
           ],
         )
-        //  : Container(),
-        );
+      //  : Container(),
+    );
   }
 }

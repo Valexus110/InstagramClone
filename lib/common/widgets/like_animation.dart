@@ -57,8 +57,9 @@ class LikeAnimationState extends State<LikeAnimation>
 
   @override
   void dispose() {
-    super.dispose();
     controller.dispose();
+    super.dispose();
+
   }
 
   @override

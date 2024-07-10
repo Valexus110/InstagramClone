@@ -13,6 +13,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
   final SearchUsersController _searchController = SearchUsersController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String currentName = "";
 
   @override
@@ -68,6 +69,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   return GestureDetector(
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => ProfileScreen(
+                          key: _scaffoldKey,
                               uid: user.uid,
                             ))),
                     child: ListTile(

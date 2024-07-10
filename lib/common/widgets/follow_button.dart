@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class FollowButton extends StatelessWidget {
   final Function()? func;
+  final bool isExit;
   final String text;
   final int divider;
   final bool isFollow;
@@ -9,6 +10,7 @@ class FollowButton extends StatelessWidget {
   const FollowButton(
       {Key? key,
       this.func,
+      this.isExit = false,
       required this.text,
       required this.divider,
       required this.isFollow})
@@ -20,7 +22,7 @@ class FollowButton extends StatelessWidget {
     return Container(
         padding: const EdgeInsets.only(top: 2),
         child: TextButton(
-          onPressed: func,
+          onPressed: isExit ? null : func,
           child: Container(
             decoration: BoxDecoration(
               color: isFollow ? Colors.blue : Colors.white,
@@ -29,14 +31,22 @@ class FollowButton extends StatelessWidget {
             ),
             alignment: Alignment.center,
             width: width / divider,
-            height: 27,
-            child: Text(
-              text,
-              style: TextStyle(
-                color: isFollow ? Colors.white : Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            height: 40,
+            child: isExit
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: Center(
+                        child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                    )))
+                : Text(
+                    text,
+                    style: TextStyle(
+                      color: isFollow ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ));
   }

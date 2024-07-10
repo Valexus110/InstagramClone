@@ -29,7 +29,7 @@ class CommentsScreenState extends State<CommentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<AuthProvider>(context).getUser;
+    final User user = Provider.of<AuthProvider>(context).getUser!;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: mobileBackgroundColor,

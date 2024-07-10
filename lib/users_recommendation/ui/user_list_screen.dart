@@ -36,6 +36,7 @@ class UserListScreenState extends State<UserListScreen> {
   final _commonController = CommonController();
   final _recommendationController = RecommendationController();
   late final String currentUid;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -103,13 +104,13 @@ class UserListScreenState extends State<UserListScreen> {
                         Row(
                           mainAxisSize: MainAxisSize.max,
                           children: [
-                            InkWell(
+                            GestureDetector(
                               onTap: () => Navigator.of(context)
                                   .push(MaterialPageRoute(
-                                      builder: (context) =>
-                                          ProfileScreen(uid: userInfo[i].uid)))
+                                      builder: (context) => ProfileScreen(
+                                          key: _scaffoldKey,
+                                          uid: userInfo[i].uid)))
                                   .then((value) async => await getData()),
-                              splashFactory: NoSplash.splashFactory,
                               child: CircleAvatar(
                                 backgroundColor: Colors.grey,
                                 backgroundImage:

@@ -11,7 +11,7 @@ part '../data/auth_repository_impl.dart';
 class AuthProvider extends ChangeNotifier {
   model.User? _user;
 
-  model.User get getUser => _user!;
+  model.User? get getUser => _user;
   final _authRepository = _AuthRepositoryImpl();
 
   String getUserId() {
