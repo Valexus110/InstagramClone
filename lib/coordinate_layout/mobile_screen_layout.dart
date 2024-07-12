@@ -4,7 +4,7 @@ import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/global_variables.dart';
 
 class MobileScreenLayout extends StatefulWidget {
-  const MobileScreenLayout({Key? key}) : super(key: key);
+  const MobileScreenLayout({super.key});
 
   @override
   State<MobileScreenLayout> createState() => _MobileScreenLayoutState();

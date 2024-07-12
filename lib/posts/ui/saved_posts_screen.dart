@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../../common/widgets/post_card.dart';
 
 class SavedPostsScreen extends StatefulWidget {
-  const SavedPostsScreen({Key? key}) : super(key: key);
+  const SavedPostsScreen({super.key});
 
   @override
   State<SavedPostsScreen> createState() => _SavedPostsScreenState();

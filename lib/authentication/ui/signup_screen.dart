@@ -13,7 +13,7 @@ import 'auth_provider.dart';
 import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   @override
   State<StatefulWidget> createState() => _SignupScreenState();

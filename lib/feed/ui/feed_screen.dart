@@ -10,7 +10,7 @@ import '../../common/widgets/post_card.dart';
 import '../../models/post.dart';
 
 class FeedScreen extends StatefulWidget {
-  const FeedScreen({Key? key}) : super(key: key);
+  const FeedScreen({super.key});
 
   @override
   State<FeedScreen> createState() => _FeedScreenState();
@@ -76,7 +76,7 @@ class _FeedScreenState extends State<FeedScreen> {
                       itemCount:
                           snapshot.data != null ? snapshot.data!.length : 0,
                       itemBuilder: (context, index) => Container(
-                        decoration: BoxDecoration(color: Colors.black),
+                        decoration: const BoxDecoration(color: Colors.black),
                             margin: EdgeInsets.symmetric(
                               horizontal:
                                   width > webScreenSize ? width * 0.3 : 16,

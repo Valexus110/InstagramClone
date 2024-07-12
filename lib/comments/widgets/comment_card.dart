@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 class CommentCard extends StatefulWidget {
   final Comment snap;
 
-  const CommentCard({Key? key, required this.snap}) : super(key: key);
+  const CommentCard({super.key, required this.snap});
 
   @override
   CommentCardState createState() => CommentCardState();

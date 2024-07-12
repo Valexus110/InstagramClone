@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import '../../coordinate_layout/coordinate_layout.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<StatefulWidget> createState() => _LoginScreenState();

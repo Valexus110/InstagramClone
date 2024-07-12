@@ -17,7 +17,7 @@ class ProfileScreen extends StatefulWidget {
   final GlobalKey? scaffoldKey;
   final String? uid;
 
-  const ProfileScreen({Key? key, this.uid, this.scaffoldKey}) : super(key: key);
+  const ProfileScreen({super.key, this.uid, this.scaffoldKey});
 
   @override
   State<StatefulWidget> createState() => _ProfileScreenState();
@@ -31,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int following = 0;
   bool isFollowing = false;
   bool isLoading = false;
-  bool isLoadingExit = false;
+  bool isFollowButtonLoading = false;
   final _commonController = CommonController();
   final _profileController = ProfileController();
   AuthProvider authProvider = AuthProvider();
@@ -67,6 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       followers = userData.followers.length;
       following = userData.following.length;
       isFollowing = userData.followers.contains(userUid);
+      Provider.of<AuthProvider>(context, listen: false).refreshUser();
       setState(() {
         isLoading = true;
       });
@@ -123,6 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
@@ -153,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ? FollowButton(
                                               func: () async {
                                                 setState(() {
-                                                  isLoadingExit = true;
+                                                  isFollowButtonLoading = true;
                                                 });
                                                 await Future.delayed(
                                                     const Duration(
@@ -167,37 +169,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                                 const LoginScreen()));
                                               },
                                               text: 'Sign Out',
-                                              isExit: isLoadingExit,
+                                              isButtonLoading:
+                                                  isFollowButtonLoading,
                                               isFollow: false,
                                               divider: 2,
                                             )
                                           : isFollowing
                                               ? FollowButton(
                                                   func: () async {
-                                                    _commonController
+                                                    setState(() {
+                                                      isFollowButtonLoading =
+                                                          true;
+                                                    });
+                                                    await _commonController
                                                         .followUser(userUid,
                                                             currentUid);
                                                     setState(() {
                                                       isFollowing = false;
                                                       followers--;
+                                                      isFollowButtonLoading =
+                                                          false;
                                                     });
                                                   },
                                                   text: 'Unfollow',
                                                   isFollow: false,
+                                                  isButtonLoading:
+                                                      isFollowButtonLoading,
                                                   divider: 2,
                                                 )
                                               : FollowButton(
                                                   func: () async {
+                                                    setState(() {
+                                                      isFollowButtonLoading =
+                                                          true;
+                                                    });
                                                     await _commonController
                                                         .followUser(userUid,
                                                             currentUid);
                                                     setState(() {
                                                       isFollowing = true;
                                                       followers++;
+                                                      setState(() {
+                                                        isFollowButtonLoading =
+                                                            false;
+                                                      });
                                                     });
                                                   },
                                                   text: 'Follow',
                                                   isFollow: true,
+                                                  isButtonLoading:
+                                                      isFollowButtonLoading,
                                                   divider: 2,
                                                 )
                                     ],
@@ -209,24 +230,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         Container(
                           alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.only(top: 15),
-                          child: Text(
-                            userData.email,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          alignment: Alignment.centerLeft,
                           padding: const EdgeInsets.only(top: 10),
-                          child: TextButton(
-                            onPressed: currentUid != userUid ? null : changeBio,
-                            child: Text(userData.bio,
+                          child: Row(
+                            children: [
+                              Text(
+                                userData.email,
                                 style: const TextStyle(
-                                    fontSize: 15, color: Colors.white)),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              currentUid == userUid
+                                  ? TextButton(
+                                      onPressed: changeProfileInfo,
+                                      child: const Text("Edit profile"))
+                                  : Container(),
+                            ],
                           ),
                         ),
+                        currentUid != userUid
+                            ? const SizedBox(
+                                height: 8,
+                              )
+                            : Container(),
+                        Text(userData.bio,
+                            style: const TextStyle(
+                                fontSize: 15, color: Colors.white)),
                       ],
                     ),
                   ),
@@ -262,8 +290,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
   }
 
-  void changeBio() {
-    _editingController = TextEditingController(text: userData.bio);
+  void changeProfileInfo() {
+    var bioEditingController = TextEditingController(text: userData.bio);
+    var nameEditingController = TextEditingController(text: userData.username);
     showDialog(
       context: context,
       builder: (context) {
@@ -271,24 +300,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           elevation: 16,
-          child: TextField(
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              fillColor: Colors.white70,
-              contentPadding: EdgeInsets.all(10.0),
+          child: Padding(
+            padding: const EdgeInsets.only(
+                top: 32, bottom: 32, left: 16.0, right: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Edit Profile",
+                  style: TextStyle(fontSize: 24),
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+                customTextField(
+                    nameEditingController, "Username", "Change username"),
+                const SizedBox(
+                  height: 32,
+                ),
+                customTextField(bioEditingController, "Bio", "Change bio"),
+                const SizedBox(
+                  height: 16,
+                ),
+                OutlinedButton(
+                  onPressed: () {
+                    _profileController.changeProfileInfo(userUid,
+                        bioEditingController.text, nameEditingController.text);
+                    getData();
+                    Navigator.pop(context);
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(Colors.white12),
+                    shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0))),
+                  ),
+                  child: const Text(
+                    "Submit",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
             ),
-            onSubmitted: (newBio) {
-              setState(() {
-                _profileController.changeBio(userUid, newBio);
-                getData();
-                Navigator.pop(context);
-              });
-            },
-            autofocus: true,
-            controller: _editingController,
           ),
         );
       },
+    );
+  }
+
+  Widget customTextField(
+      TextEditingController controller, String label, String hint) {
+    final inputBorder = OutlineInputBorder(
+        borderSide: Divider.createBorderSide(context),
+        borderRadius: const BorderRadius.all(Radius.circular(16.0)));
+    return TextField(
+      decoration: InputDecoration(
+        filled: true,
+        label: Text(label),
+        hintText: hint,
+        border: inputBorder,
+        fillColor: Colors.white12,
+        contentPadding: const EdgeInsets.all(10.0),
+      ),
+      autofocus: true,
+      controller: controller,
     );
   }
 
@@ -296,11 +370,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return GestureDetector(
       onTap: () => {
         if (label != "Posts" && num > 0)
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => UserListScreen(
-                  userId: currentUid,
-                  title: label,
-                  isFollowers: label == "Followers")))
+          Navigator.of(context)
+              .push(MaterialPageRoute(
+                  builder: (context) => UserListScreen(
+                      userId: currentUid,
+                      title: label,
+                      isFollowers: label == "Followers")))
+              .then(
+                  (value) async => value == "update" ? await getData() : null),
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

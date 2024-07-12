@@ -23,10 +23,11 @@ class ProfileController {
     return await _profileRepository.getUserPosts(uid);
   }
 
-  Future<void> changeBio(
+  Future<void> changeProfileInfo(
     String uid,
     String bio,
+    String username,
   ) async {
-    return await _profileRepository.changeBio(uid, bio);
+    return await _profileRepository.changeProfileInfo(uid, bio, username);
   }
 }

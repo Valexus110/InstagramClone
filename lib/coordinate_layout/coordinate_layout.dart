@@ -8,8 +8,7 @@ import 'mobile_screen_layout.dart';
 
 class CoordinateLayout extends StatefulWidget {
   const CoordinateLayout(
-      {Key? key})
-      : super(key: key);
+      {super.key});
 
   @override
   State<CoordinateLayout> createState() => _CoordinateLayoutState();

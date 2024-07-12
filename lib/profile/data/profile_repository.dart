@@ -7,10 +7,9 @@ abstract class ProfileRepository {
 
   Future<List<Post>> getUserPosts(String uid);
 
-  Future<void> changeBio(
+  Future<void> changeProfileInfo(
     String uid,
     String bio,
+    String username,
   );
-
-
 }

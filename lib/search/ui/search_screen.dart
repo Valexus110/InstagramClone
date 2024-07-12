@@ -4,7 +4,7 @@ import 'package:instagram_example/search/ui/search_controller.dart';
 import 'package:instagram_example/utils/colors.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({Key? key}) : super(key: key);
+  const SearchScreen({super.key});
 
   @override
   State<StatefulWidget> createState() => _SearchScreenState();

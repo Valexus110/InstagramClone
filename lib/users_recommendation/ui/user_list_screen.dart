@@ -17,11 +17,10 @@ class UserListScreen extends StatefulWidget {
   final bool? isFollowers;
 
   const UserListScreen(
-      {Key? key,
+      {super.key,
       this.title = "Users who you might know",
       this.isFollowers,
-      this.userId})
-      : super(key: key);
+      this.userId});
 
   @override
   State<UserListScreen> createState() => UserListScreenState();
@@ -84,7 +83,6 @@ class UserListScreenState extends State<UserListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         centerTitle: true,
         title: Text(
           widget.title,
@@ -118,28 +116,34 @@ class UserListScreenState extends State<UserListScreen> {
                                 radius: 30,
                               ),
                             ),
-                            Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 16.0, right: 8),
-                                    child: Text(
-                                      userInfo[i].username,
-                                      style: const TextStyle(fontSize: 20),
+                            Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 16.0, right: 8),
+                                      child: Text(
+                                        userInfo[i].username,
+                                        style: const TextStyle(
+                                            fontSize: 16,
+                                            overflow: TextOverflow.ellipsis),
+                                      ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 16.0, right: 8),
-                                    child: Text(
-                                      userInfo[i].email,
-                                      style: const TextStyle(fontSize: 12),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 16.0, right: 8),
+                                      child: Text(
+                                        userInfo[i].email,
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            overflow: TextOverflow.ellipsis),
+                                      ),
                                     ),
-                                  ),
-                                ]),
-                            const Spacer(),
-                            widget.isFollowers == false
+                                  ]),
+                            ),
+                            widget.isFollowers == false &&
+                                    currentUid != userInfo[i].uid
                                 ? FollowButton(
                                     func: () async {
                                       setState(() {
@@ -150,11 +154,14 @@ class UserListScreenState extends State<UserListScreen> {
                                       var name = userInfo[i].username;
                                       userInfo.removeAt(i);
                                       if (!context.mounted) return;
-                                      showSnackBar(context,
-                                          "successfully followed $name");
+                                      following.contains(name)
+                                          ? showSnackBar(context,
+                                              "successfully followed $name")
+                                          : showSnackBar(context,
+                                              "successfully unfollowed $name");
                                       await getData();
                                     },
-                                    text: widget.isFollowers == false
+                                    text: following.contains(userInfo[i].uid)
                                         ? 'Unfollow'
                                         : "Follow",
                                     isFollow: widget.isFollowers != false,

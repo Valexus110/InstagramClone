@@ -5,7 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_example/authentication/ui/auth_provider.dart';
+import 'package:instagram_example/authentication/ui/auth_provider.dart' as provider;
+import 'package:instagram_example/firebase_options.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:provider/provider.dart';
 
@@ -14,12 +15,12 @@ import 'coordinate_layout/coordinate_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -79,7 +80,7 @@ class _MyAppState extends State<MyApp> {
     const time = Duration(seconds: 5);
     _timer = Timer.periodic(
       time,
-      (Timer timer) {
+          (Timer timer) {
         getUser();
         _timer.cancel();
       },
@@ -90,7 +91,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => AuthProvider()),
+          ChangeNotifierProvider(create: (_) => provider.AuthProvider()),
         ],
         child: MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -100,11 +101,11 @@ class _MyAppState extends State<MyApp> {
             ),
             home: _isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(
-                    color: primaryColor,
-                  ))
+                child: CircularProgressIndicator(
+                  color: primaryColor,
+                ))
                 : LayoutBuilder(builder: (context, constraints) {
-                    return screen;
-                  })));
+              return screen;
+            })));
   }
 }
