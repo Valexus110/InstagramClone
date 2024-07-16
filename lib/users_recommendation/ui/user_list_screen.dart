@@ -28,6 +28,7 @@ class UserListScreen extends StatefulWidget {
 
 class UserListScreenState extends State<UserListScreen> {
   bool isLoading = false;
+  bool isDataUpdated = false;
   var followers = [];
   var following = [];
 
@@ -81,98 +82,116 @@ class UserListScreenState extends State<UserListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          widget.title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          return;
+        }
+        Navigator.of(context).pop(isDataUpdated);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(isDataUpdated),
+          ),
+          centerTitle: true,
+          title: Text(
+            widget.title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
         ),
-      ),
-      body: Column(children: [
-        const SizedBox(height: 20),
-        isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : userInfo.isEmpty
-                ? const Center(child: Text("No users found"))
-                : Column(children: [
-                    for (int i = 0; i < userInfo.length; i++)
-                      Column(children: [
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.of(context)
-                                  .push(MaterialPageRoute(
-                                      builder: (context) => ProfileScreen(
-                                          key: _scaffoldKey,
-                                          uid: userInfo[i].uid)))
-                                  .then((value) async => await getData()),
-                              child: CircleAvatar(
-                                backgroundColor: Colors.grey,
-                                backgroundImage:
-                                    NetworkImage(userInfo[i].photoUrl),
-                                radius: 30,
+        body: Column(children: [
+          const SizedBox(height: 20),
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : userInfo.isEmpty
+                  ? const Center(child: Text("No users found"))
+                  : Column(children: [
+                      for (int i = 0; i < userInfo.length; i++)
+                        Column(children: [
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.of(context)
+                                    .push(MaterialPageRoute(
+                                        builder: (context) => ProfileScreen(
+                                            key: _scaffoldKey,
+                                            uid: userInfo[i].uid)))
+                                    .then((value) async => await getData()),
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.grey,
+                                  backgroundImage:
+                                      NetworkImage(userInfo[i].photoUrl),
+                                  radius: 30,
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 16.0, right: 8),
-                                      child: Text(
-                                        userInfo[i].username,
-                                        style: const TextStyle(
-                                            fontSize: 16,
-                                            overflow: TextOverflow.ellipsis),
+                              Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 16.0, right: 8),
+                                        child: Text(
+                                          userInfo[i].username,
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              overflow: TextOverflow.ellipsis),
+                                        ),
                                       ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 16.0, right: 8),
-                                      child: Text(
-                                        userInfo[i].email,
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            overflow: TextOverflow.ellipsis),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 16.0, right: 8),
+                                        child: Text(
+                                          userInfo[i].email,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              overflow: TextOverflow.ellipsis),
+                                        ),
                                       ),
-                                    ),
-                                  ]),
-                            ),
-                            widget.isFollowers == false &&
-                                    currentUid != userInfo[i].uid
-                                ? FollowButton(
-                                    func: () async {
-                                      setState(() {
-                                        isLoading = true;
-                                      });
-                                      await _commonController.followUser(
-                                          currentUid, userInfo[i].uid);
-                                      var name = userInfo[i].username;
-                                      userInfo.removeAt(i);
-                                      if (!context.mounted) return;
-                                      following.contains(name)
-                                          ? showSnackBar(context,
-                                              "successfully followed $name")
-                                          : showSnackBar(context,
-                                              "successfully unfollowed $name");
-                                      await getData();
-                                    },
-                                    text: following.contains(userInfo[i].uid)
-                                        ? 'Unfollow'
-                                        : "Follow",
-                                    isFollow: widget.isFollowers != false,
-                                    divider: 4,
-                                  )
-                                : Container(),
-                          ],
-                        ),
-                      ]),
-                  ]),
-      ]),
+                                    ]),
+                              ),
+                              widget.isFollowers == false &&
+                                      currentUid != userInfo[i].uid
+                                  ? FollowButton(
+                                      func: () async {
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+                                        await _commonController.followUser(
+                                            currentUid, userInfo[i].uid);
+                                        var name = userInfo[i].username;
+                                        userInfo.removeAt(i);
+                                        if (!context.mounted) return;
+                                        following.contains(name)
+                                            ? showSnackBar(context,
+                                                "successfully followed $name")
+                                            : showSnackBar(context,
+                                                "successfully unfollowed $name");
+                                        await getData();
+                                        if (!context.mounted) return;
+                                        setState(() {
+                                          isDataUpdated = true;
+                                        });
+                                      },
+                                      text: following.contains(userInfo[i].uid)
+                                          ? 'Unfollow'
+                                          : "Follow",
+                                      isFollow: widget.isFollowers != false,
+                                      divider: 4,
+                                    )
+                                  : Container(),
+                            ],
+                          ),
+                        ]),
+                    ]),
+        ]),
+      ),
     );
   }
 }

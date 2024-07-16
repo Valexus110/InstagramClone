@@ -83,8 +83,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     _editingController = TextEditingController();
     authProvider = Provider.of(context);
-    // currentUid = authProvider.getUserId();
-    // currentUid = Provider.of<AuthProvider>(context).getUser!.uid;
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
@@ -376,8 +374,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       userId: currentUid,
                       title: label,
                       isFollowers: label == "Followers")))
-              .then(
-                  (value) async => value == "update" ? await getData() : null),
+              .then((value) async =>
+                  value != null && value ? await getData() : null),
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
