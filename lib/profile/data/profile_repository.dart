@@ -11,5 +11,6 @@ abstract class ProfileRepository {
     String uid,
     String bio,
     String username,
+    String photoUrl,
   );
 }

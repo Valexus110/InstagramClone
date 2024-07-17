@@ -13,7 +13,7 @@ class StorageController {
       String childName, Uint8List file, bool isPost,
       [String postId = ""]) async {
     return await _storageRepository.uploadImageToStorage(
-        childName, file, isPost);
+        childName, file, isPost, postId);
   }
 
   Future<void> deleteImageFromStorage(String childName, String doc) async {

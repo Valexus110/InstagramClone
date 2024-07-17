@@ -64,7 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          //    physics: const NeverScrollableScrollPhysics(),
           child: SafeArea(
             child: Container(
               padding: MediaQuery.of(context).size.width > webScreenSize

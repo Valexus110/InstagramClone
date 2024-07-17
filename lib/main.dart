@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 
 import 'authentication/ui/login_screen.dart';
 import 'coordinate_layout/coordinate_layout.dart';
+import 'coordinate_layout/page_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +94,7 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => provider.AuthProvider()),
+          ChangeNotifierProvider(create: (_)=> PageProvider())
         ],
         child: MaterialApp(
             debugShowCheckedModeBanner: false,

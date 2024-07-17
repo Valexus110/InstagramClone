@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_example/coordinate_layout/page_provider.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/global_variables.dart';
+import 'package:provider/provider.dart';
 
 class MobileScreenLayout extends StatefulWidget {
   const MobileScreenLayout({super.key});
@@ -13,6 +15,7 @@ class MobileScreenLayout extends StatefulWidget {
 class _MobileScreenLayoutState extends State<MobileScreenLayout> {
   int _page = 0;
   late PageController pageController;
+  late PageProvider pageProvider;
 
   @override
   void initState() {
@@ -27,7 +30,7 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
   }
 
   void navigationTapped(int page) {
-    pageController.jumpToPage(page);
+    pageProvider.pageSelection.jumpToPage(page);
   }
 
   void onPageChanged(int page) {
@@ -38,10 +41,11 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
 
   @override
   Widget build(BuildContext context) {
+    pageProvider = Provider.of<PageProvider>(context);
     return Scaffold(
       body: PageView(
         physics: const NeverScrollableScrollPhysics(),
-        controller: pageController,
+        controller: pageProvider.pageSelection,
         onPageChanged: onPageChanged,
         children: homeScreenItems,
       ),

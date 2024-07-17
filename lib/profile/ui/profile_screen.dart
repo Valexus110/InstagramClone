@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
 import 'package:instagram_example/common/common_controller.dart';
 import 'package:instagram_example/posts/ui/saved_posts_screen.dart';
@@ -11,7 +14,9 @@ import 'package:instagram_example/models/user.dart' as model;
 
 import '../../authentication/ui/login_screen.dart';
 import '../../common/widgets/follow_button.dart';
+import '../../coordinate_layout/page_provider.dart';
 import '../../models/post.dart';
+import '../../storage/storage_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   final GlobalKey? scaffoldKey;
@@ -34,9 +39,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool isFollowButtonLoading = false;
   final _commonController = CommonController();
   final _profileController = ProfileController();
+  final _storageController = StorageController();
   AuthProvider authProvider = AuthProvider();
   late String userUid;
   late String currentUid;
+  Uint8List? _image;
 
   @override
   void initState() {
@@ -79,10 +86,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  Future<Uint8List?> _selectImage() async {
+    Uint8List? im = await pickImage(ImageSource.gallery);
+    return im;
+  }
+
   @override
   Widget build(BuildContext context) {
     _editingController = TextEditingController();
     authProvider = Provider.of(context);
+    final pageProvider = Provider.of<PageProvider>(context);
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
@@ -99,6 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               actions: [
                 IconButton(
                     onPressed: () {
+                      pageProvider.pageSelection.jumpToPage(0);
                       Navigator.popUntil(context, (route) => route.isFirst);
                     },
                     icon: const Icon(Icons.home)),
@@ -291,58 +305,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void changeProfileInfo() {
     var bioEditingController = TextEditingController(text: userData.bio);
     var nameEditingController = TextEditingController(text: userData.username);
+    setState(() {
+      _image = null;
+    });
     showDialog(
       context: context,
       builder: (context) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          elevation: 16,
-          child: Padding(
-            padding: const EdgeInsets.only(
-                top: 32, bottom: 32, left: 16.0, right: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Edit Profile",
-                  style: TextStyle(fontSize: 24),
+        return StatefulBuilder(builder: (context, StateSetter setState) {
+          return Dialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            elevation: 16,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                  top: 32, bottom: 32, left: 16.0, right: 16),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      "Edit Profile",
+                      style: TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    _image == null
+                        ? CircleAvatar(
+                            radius: 32,
+                            backgroundImage: NetworkImage(userData.photoUrl),
+                          )
+                        : CircleAvatar(
+                            radius: 32,
+                            backgroundImage: MemoryImage(_image!),
+                          ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        var im = await _selectImage();
+                        setState(() {
+                          _image = im;
+                          // isImageLoading = false;
+                        });
+                      },
+                      child: const Text("Change profile photo"),
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    customTextField(
+                        nameEditingController, "Username", "Change username"),
+                    const SizedBox(
+                      height: 32,
+                    ),
+                    customTextField(bioEditingController, "Bio", "Change bio"),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    OutlinedButton(
+                      onPressed: () {
+                        updateInfo(bioEditingController.text,
+                            nameEditingController.text);
+                      },
+                      style: ButtonStyle(
+                        backgroundColor:
+                            WidgetStateProperty.all(Colors.white12),
+                        shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0))),
+                      ),
+                      child: const Text(
+                        "Submit",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(
-                  height: 16,
-                ),
-                customTextField(
-                    nameEditingController, "Username", "Change username"),
-                const SizedBox(
-                  height: 32,
-                ),
-                customTextField(bioEditingController, "Bio", "Change bio"),
-                const SizedBox(
-                  height: 16,
-                ),
-                OutlinedButton(
-                  onPressed: () {
-                    _profileController.changeProfileInfo(userUid,
-                        bioEditingController.text, nameEditingController.text);
-                    getData();
-                    Navigator.pop(context);
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.all(Colors.white12),
-                    shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0))),
-                  ),
-                  child: const Text(
-                    "Submit",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        );
+          );
+        });
       },
     );
+  }
+
+  void updateInfo(String bio, String name) async {
+    String? photoUrl;
+    if (_image != null) {
+      photoUrl = await _storageController.uploadImageToStorage(
+          'profilePics', _image!, false);
+    }
+    await _profileController.changeProfileInfo(
+        userUid, bio, name, photoUrl ?? userData.photoUrl);
+    getData();
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 
   Widget customTextField(

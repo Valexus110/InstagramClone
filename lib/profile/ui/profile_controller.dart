@@ -27,7 +27,9 @@ class ProfileController {
     String uid,
     String bio,
     String username,
+    String photoUrl,
   ) async {
-    return await _profileRepository.changeProfileInfo(uid, bio, username);
+    return await _profileRepository.changeProfileInfo(
+        uid, bio, username, photoUrl);
   }
 }

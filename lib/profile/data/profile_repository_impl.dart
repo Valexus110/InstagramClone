@@ -5,18 +5,20 @@ class _ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<void> changeProfileInfo(
-      String uid, String bio, String username) async {
+      String uid, String bio, String username, String photoUrl) async {
     try {
       await _firestore.collection('users').doc(uid).update({
         'username': username,
         'bio': bio,
+        'photoUrl': photoUrl,
       });
       var docs = await _firestore
           .collection('posts')
           .where("uid", isEqualTo: uid)
           .get();
       for (var doc in docs.docs) {
-        await doc.reference.update({'username': username});
+        await doc.reference
+            .update({'username': username, 'profileImage': photoUrl});
       }
     } catch (e) {
       if (kDebugMode) {
