@@ -36,6 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int following = 0;
   bool isFollowing = false;
   bool isLoading = false;
+  bool isUpdateLoading = false;
   bool isFollowButtonLoading = false;
   final _commonController = CommonController();
   final _profileController = ProfileController();
@@ -310,6 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(builder: (context, StateSetter setState) {
           return Dialog(
@@ -364,22 +366,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(
                       height: 16,
                     ),
-                    OutlinedButton(
-                      onPressed: () {
-                        updateInfo(bioEditingController.text,
-                            nameEditingController.text);
-                      },
-                      style: ButtonStyle(
-                        backgroundColor:
-                            WidgetStateProperty.all(Colors.white12),
-                        shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0))),
-                      ),
-                      child: const Text(
-                        "Submit",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+                    isUpdateLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              OutlinedButton(
+                                onPressed: () async {
+                                  isUpdateLoading
+                                      ? null
+                                      : {
+                                          setState(() {
+                                            isUpdateLoading = true;
+                                          }),
+                                          await updateInfo(
+                                              bioEditingController.text,
+                                              nameEditingController.text),
+                                          if (context.mounted)
+                                            {
+                                              setState(() {
+                                                isUpdateLoading = false;
+                                              }),
+                                              getData(),
+                                              Navigator.pop(context),
+                                            }
+                                        };
+                                },
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                      WidgetStateProperty.all(Colors.white12),
+                                  shape: WidgetStateProperty.all(
+                                      RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(30.0))),
+                                ),
+                                child: const Text(
+                                  "Submit",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              OutlinedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                      WidgetStateProperty.all(Colors.white12),
+                                  shape: WidgetStateProperty.all(
+                                      RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(30.0))),
+                                ),
+                                child: const Text(
+                                  "Cancel",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
                   ],
                 ),
               ),
@@ -390,7 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void updateInfo(String bio, String name) async {
+  Future<void> updateInfo(String bio, String name) async {
     String? photoUrl;
     if (_image != null) {
       photoUrl = await _storageController.uploadImageToStorage(
@@ -398,9 +444,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     await _profileController.changeProfileInfo(
         userUid, bio, name, photoUrl ?? userData.photoUrl);
-    getData();
-    if (!mounted) return;
-    Navigator.pop(context);
   }
 
   Widget customTextField(
