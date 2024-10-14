@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_example/main.dart';
 import 'package:instagram_example/profile/ui/profile_screen.dart';
 import 'package:instagram_example/search/ui/search_controller.dart';
 import 'package:instagram_example/utils/colors.dart';
@@ -34,11 +35,11 @@ class _SearchScreenState extends State<SearchScreen> {
           backgroundColor: mobileBackgroundColor,
           title: TextFormField(
             controller: _controller,
-            decoration: const InputDecoration(
-                icon: Icon(Icons.search),
-                hintText: 'type a username',
-                labelText: "Search for a user",
-                labelStyle: TextStyle(fontSize: 20)),
+            decoration: InputDecoration(
+                icon: const Icon(Icons.search),
+                hintText: locale.typeAUsername,
+                labelText: locale.searchUser,
+                labelStyle: const TextStyle(fontSize: 20)),
             onChanged: (str) {
               setState(() {
                 currentName = str;
@@ -69,7 +70,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   return GestureDetector(
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => ProfileScreen(
-                          key: _scaffoldKey,
+                              key: _scaffoldKey,
                               uid: user.uid,
                             ))),
                     child: ListTile(

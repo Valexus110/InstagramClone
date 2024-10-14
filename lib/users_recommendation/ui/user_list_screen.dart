@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_example/main.dart';
 import 'package:instagram_example/profile/ui/profile_screen.dart';
 import 'package:instagram_example/users_recommendation/ui/recommendation_controller.dart';
 import 'package:instagram_example/utils/utils.dart';
@@ -17,10 +18,7 @@ class UserListScreen extends StatefulWidget {
   final bool? isFollowers;
 
   const UserListScreen(
-      {super.key,
-      this.title = "Users who you might know",
-      this.isFollowers,
-      this.userId});
+      {super.key, required this.title, this.isFollowers, this.userId});
 
   @override
   State<UserListScreen> createState() => UserListScreenState();
@@ -92,10 +90,12 @@ class UserListScreenState extends State<UserListScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(isDataUpdated),
-          ),
+          leading: (widget.title == locale.usersYouMightKnow)
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.of(context).pop(isDataUpdated),
+                ),
           centerTitle: true,
           title: Text(
             widget.title,
@@ -107,7 +107,7 @@ class UserListScreenState extends State<UserListScreen> {
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : userInfo.isEmpty
-                  ? const Center(child: Text("No users found"))
+                  ? Center(child: Text(locale.noUsersFound))
                   : Column(children: [
                       for (int i = 0; i < userInfo.length; i++)
                         Column(children: [
@@ -170,9 +170,9 @@ class UserListScreenState extends State<UserListScreen> {
                                         if (!context.mounted) return;
                                         following.contains(name)
                                             ? showSnackBar(context,
-                                                "successfully followed $name")
+                                                "${locale.successfullyFollowed} $name")
                                             : showSnackBar(context,
-                                                "successfully unfollowed $name");
+                                                "${locale.successfullyUnFollowed} $name");
                                         await getData();
                                         if (!context.mounted) return;
                                         setState(() {
@@ -180,8 +180,8 @@ class UserListScreenState extends State<UserListScreen> {
                                         });
                                       },
                                       text: following.contains(userInfo[i].uid)
-                                          ? 'Unfollow'
-                                          : "Follow",
+                                          ? locale.unfollow
+                                          : locale.follow,
                                       isFollow: widget.isFollowers != false,
                                       divider: 4,
                                     )

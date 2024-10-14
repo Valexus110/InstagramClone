@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:instagram_example/models/user.dart' as model;
 import 'package:instagram_example/storage/storage_controller.dart';
 
+import '../../main.dart';
+import '../../utils/const_variables.dart';
+
 part '../data/auth_repository.dart';
 
 part '../data/auth_repository_impl.dart';

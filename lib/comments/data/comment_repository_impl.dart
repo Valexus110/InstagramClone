@@ -4,9 +4,9 @@ class _CommentRepositoryImpl implements CommentRepository {
   final _firestore = FirebaseFirestore.instance;
 
   @override
-  Future<String> postComment(String postId, String text, String uid,
-      String name, String profilePic) async {
-    String message = 'Unknown error';
+  Future<String> postComment(String currentPostId, String text,
+      String currentUid, String currentName, String currentProfilePic) async {
+    String message = locale.unknownError;
     List<InternetAddress>? connection;
     try {
       connection = await InternetAddress.lookup('example.com');
@@ -17,28 +17,22 @@ class _CommentRepositoryImpl implements CommentRepository {
       if (text.isNotEmpty && connection!.isNotEmpty) {
         String commentId = const Uuid().v1();
         var json = Comment(
-                uid: uid,
+                uid: currentUid,
                 commentId: commentId,
-                profilePic: profilePic,
-                name: name,
+                profilePic: currentProfilePic,
+                name: currentName,
                 text: text,
                 datePublished: DateTime.now())
             .toJson();
         await _firestore
-            .collection('posts')
-            .doc(postId)
-            .collection('comments')
+            .collection(posts)
+            .doc(currentPostId)
+            .collection(comments)
             .doc(commentId)
             .set(json);
-        // 'profilePic': profilePic,
-        // 'name': name,
-        // 'uid': uid,
-        // 'text': text,
-        // 'commentId': commentId,
-        // 'datePublished': DateTime.now(),
         message = 'Ok';
       } else if (text.isEmpty && connection!.isNotEmpty) {
-        message = 'Text is empty';
+        message = locale.emptyText;
       }
     } catch (e) {
       if (kDebugMode) {
@@ -49,25 +43,25 @@ class _CommentRepositoryImpl implements CommentRepository {
   }
 
   @override
-  Future<int> getCommentsCount(String postId) async {
+  Future<int> getCommentsCount(String currentPostId) async {
     QuerySnapshot snap = await FirebaseFirestore.instance
-        .collection('posts')
-        .doc(postId)
-        .collection('comments')
+        .collection(posts)
+        .doc(currentPostId)
+        .collection(comments)
         .get();
     return snap.docs.length;
   }
 
   @override
-  Stream<List<Comment>> getListOfComments(String postId) {
-    var comments = FirebaseFirestore.instance
-        .collection('posts')
-        .doc(postId)
-        .collection('comments')
-        .orderBy('datePublished', descending: false)
+  Stream<List<Comment>> getListOfComments(String currentPostId) {
+    var commentsList = FirebaseFirestore.instance
+        .collection(posts)
+        .doc(currentPostId)
+        .collection(comments)
+        .orderBy(datePublished, descending: false)
         .snapshots();
 
-    return comments.map(
-            (snapshot) => snapshot.docs.map((doc) => Comment.fromJson(doc)).toList());
+    return commentsList.map((snapshot) =>
+        snapshot.docs.map((doc) => Comment.fromJson(doc)).toList());
   }
 }

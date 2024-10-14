@@ -5,12 +5,12 @@ class _FeedRepositoryImpl implements FeedRepository {
 
   @override
   Stream<List<Post>> getPosts() {
-    var posts = _firestore
-        .collection('posts')
-        .orderBy('datePublished', descending: true)
+    var postsList = _firestore
+        .collection(posts)
+        .orderBy(datePublished, descending: true)
         .snapshots();
 
-    return posts.map(
+    return postsList.map(
             (snapshot) => snapshot.docs.map((doc) => Post.fromJson(doc)).toList());
   }
 }

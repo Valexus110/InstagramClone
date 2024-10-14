@@ -9,23 +9,23 @@ class _AuthRepositoryImpl implements AuthRepository {
   Future<model.User> getUserDetails() async {
     auth.User currentUser = _auth.currentUser!;
     DocumentSnapshot snap =
-        await _firestore.collection('users').doc(currentUser.uid).get();
+        await _firestore.collection(users).doc(currentUser.uid).get();
     return model.User.fromJson(snap.data() as Map<String, dynamic>);
   }
 
   @override
   Future<String> loginUser(
       {required String email, required String password}) async {
-    String res = "Please fill all fields";
+    String res = locale.fillAllFields;
 
     try {
       if (email.isNotEmpty && password.isNotEmpty) {
         await _auth.signInWithEmailAndPassword(
             email: email, password: password);
-        res = "Success";
+        res = success;
       }
     } catch (err) {
-      res = "Invalid email or password";
+      res = locale.invalidField;
       if (kDebugMode) {
         print(err.toString());
       }
@@ -45,21 +45,21 @@ class _AuthRepositoryImpl implements AuthRepository {
       required String username,
       required String bio,
       required Uint8List? file}) async {
-    String res = "Please fill all fields";
-    file == null ? res = "$res and add photo" : res = res;
+    String res = locale.fillAllFields;
+    file == null ? res = "$res ${locale.andAddPhoto}" : res = res;
     try {
       if (email.isNotEmpty &&
           password.isNotEmpty &&
           username.isNotEmpty &&
           bio.isNotEmpty) {
         if (file == null) {
-          res = "You need to add the photo to complete registration";
+          res = locale.addPhoto;
         } else {
           auth.UserCredential userCredential = await _auth
               .createUserWithEmailAndPassword(email: email, password: password);
 
           String photoUrl = await storageRepository.uploadImageToStorage(
-              'profilePics', file, false);
+              profilePics, file, false);
           model.User currentUser = model.User(
             username: username,
             uid: userCredential.user!.uid,
@@ -71,17 +71,17 @@ class _AuthRepositoryImpl implements AuthRepository {
           );
 
           await _firestore
-              .collection('users')
+              .collection(users)
               .doc(userCredential.user!.uid)
               .set(currentUser.toJson());
-          res = "Success";
+          res = success;
         }
       }
     } on FirebaseException catch (err) {
-      if (err.code == 'invalid-email') {
-        res = "The email is badly formatted.";
-      } else if (err.code == 'weak-password') {
-        res = "Your password should be at least 6 characters.";
+      if (err.code == invalidEmail) {
+        res = locale.badFormatEmail;
+      } else if (err.code == weakPassword) {
+        res = locale.weakPassword;
       }
     } catch (err) {
       res = err.toString();

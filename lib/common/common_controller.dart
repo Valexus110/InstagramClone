@@ -2,6 +2,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import '../utils/const_variables.dart';
+
 part 'data/common_repository.dart';
 
 part 'data/common_repository_impl.dart';

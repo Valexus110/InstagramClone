@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../main.dart';
 import '../../models/comment.dart';
+import '../../utils/const_variables.dart';
 
 part '../data/comment_repository.dart';
 

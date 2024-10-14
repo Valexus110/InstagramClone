@@ -19,3 +19,20 @@ showSnackBar(BuildContext context, String content) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(milliseconds: 2500), content: Text(content)));
 }
+
+datePattern(DateTime messageDate, DateTime dateTime) {
+  final difference = daysBetween(dateTime, messageDate);
+  if (difference < 1) {
+    return 'H:mm';
+  } else if (difference < 7) {
+    return 'EEEE';
+  } else {
+    return 'MMM, d';
+  }
+}
+
+int daysBetween(DateTime from, DateTime to) {
+  from = DateTime(from.year, from.month, from.day);
+  to = DateTime(to.year, to.month, to.day);
+  return (to.difference(from).inHours / 24).round();
+}

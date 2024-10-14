@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
+import 'package:instagram_example/chat/ui/chat_screen.dart';
 import 'package:instagram_example/feed/ui/feed_controller.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/global_variables.dart';
@@ -46,7 +47,8 @@ class _FeedScreenState extends State<FeedScreen> {
               ),
               actions: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => ChatScreen())),
                   icon: const Icon(Icons.messenger_outline),
                 ),
               ],
@@ -76,7 +78,8 @@ class _FeedScreenState extends State<FeedScreen> {
                       itemCount:
                           snapshot.data != null ? snapshot.data!.length : 0,
                       itemBuilder: (context, index) => Container(
-                        decoration: const BoxDecoration(color: Colors.black),
+                            decoration:
+                                const BoxDecoration(color: Colors.black),
                             margin: EdgeInsets.symmetric(
                               horizontal:
                                   width > webScreenSize ? width * 0.3 : 16,

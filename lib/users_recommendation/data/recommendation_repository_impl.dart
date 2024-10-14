@@ -5,14 +5,14 @@ class _RecommendationRepositoryImpl implements RecommendationRepository {
 
   @override
   Future<Map<String, dynamic>> getFollowed(String currUid) async {
-    var userSnap = await _firestore.collection('users').doc(currUid).get();
+    var userSnap = await _firestore.collection(users).doc(currUid).get();
     return userSnap.data() ?? {};
   }
 
   @override
   Future<List<model.User>> getUserInfo(
       bool? isFollowers, String currUid, List following, List followers) async {
-    var user = await _firestore.collection('users').get();
+    var user = await _firestore.collection(users).get();
     var userInfo = <model.User>[];
     for (var e in user.docs) {
       Map<String, dynamic>? userData;

@@ -10,11 +10,11 @@ class _SearchRepositoryImpl implements SearchRepository {
   Future<List<User>?> getUsers(String currentName) async {
     List<User> actualUsers = [];
     if (currentName.isEmpty) return null;
-    var users = await _firestore.collection('users').get();
-    for (var user in users.docs) {
+    var usersList = await _firestore.collection(users).get();
+    for (var user in usersList.docs) {
       if (user.id == authProvider.getUserId()) continue;
       if (user
-          .data()['username']
+          .data()[username]
           .toString()
           .toLowerCase()
           .contains(currentName.toLowerCase())) {

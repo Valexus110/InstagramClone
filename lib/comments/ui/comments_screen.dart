@@ -6,6 +6,7 @@ import 'package:instagram_example/comments/widgets/comment_card.dart';
 import 'package:instagram_example/models/user.dart';
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
 import 'package:provider/provider.dart';
+import '../../main.dart';
 import '../../utils/utils.dart';
 
 class CommentsScreen extends StatefulWidget {
@@ -33,7 +34,7 @@ class CommentsScreenState extends State<CommentsScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: mobileBackgroundColor,
-        title: const Text('Comments'),
+        title: Text(locale.comments),
         centerTitle: false,
       ),
       body: StreamBuilder(
@@ -66,9 +67,12 @@ class CommentsScreenState extends State<CommentsScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16.0, right: 8),
                   child: TextField(
+                    minLines: 2,
+                    maxLines: 5,
                     controller: _commentTextController,
                     decoration: InputDecoration(
-                      hintText: 'Comment as ${user.username}',
+                      hintStyle: TextStyle(fontSize: 14),
+                      hintText:locale.commentsAs(user.username),// 'Comment as ${user.username}',
                       border: InputBorder.none,
                     ),
                   ),
@@ -91,9 +95,9 @@ class CommentsScreenState extends State<CommentsScreen> {
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                  child: const Text(
-                    "Post",
-                    style: TextStyle(
+                  child: Text(
+                    locale.post,
+                    style: const TextStyle(
                       color: Colors.blueAccent,
                     ),
                   ),

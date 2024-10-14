@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:instagram_example/coordinate_layout/page_provider.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/global_variables.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/keystore.dart';
 
 class MobileScreenLayout extends StatefulWidget {
   const MobileScreenLayout({super.key});
@@ -20,7 +23,18 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
   @override
   void initState() {
     super.initState();
+    getPageNumber();
     pageController = PageController();
+  }
+
+  getPageNumber() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _page = prefs.getInt(KeyStore.startPageNumber) ??
+          KeyStore.startPageNumberDefault;
+      navigationTapped(_page);
+    });
+    FlutterNativeSplash.remove();
   }
 
   @override

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instagram_example/models/user.dart' as model;
 
+import '../../utils/const_variables.dart';
+
 part '../data/recommendation_repository.dart';
 
 part '../data/recommendation_repository_impl.dart';

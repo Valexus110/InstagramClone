@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
 
 import '../../models/user.dart';
+import '../../utils/const_variables.dart';
 
 part '../data/search_repository.dart';
 

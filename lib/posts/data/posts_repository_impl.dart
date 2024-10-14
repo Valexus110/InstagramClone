@@ -7,31 +7,32 @@ class _PostsRepositoryImpl implements PostsRepository {
   final storageRepository = StorageController();
 
   @override
-  Future<void> addBookmark(String postId, String uid, bool saved) async {
+  Future<void> addBookmark(
+      String currentPostId, String currentUid, bool saved) async {
     if (saved) {
       await _firestore
-          .collection('savedPosts')
-          .doc(uid)
-          .collection('posts')
-          .doc(postId)
+          .collection(savedPosts)
+          .doc(currentUid)
+          .collection(posts)
+          .doc(currentPostId)
           .delete();
     } else {
-      var doc = await _firestore.collection('posts').doc(postId).get();
+      var doc = await _firestore.collection(posts).doc(currentPostId).get();
       var data = Post.toJson(doc.data()!);
       await _firestore
-          .collection('savedPosts')
-          .doc(uid)
-          .collection('posts')
-          .doc(postId)
+          .collection(savedPosts)
+          .doc(currentUid)
+          .collection(posts)
+          .doc(currentPostId)
           .set(data);
     }
   }
 
   @override
-  Future<void> deletePost(String postId) async {
+  Future<void> deletePost(String currentPostId) async {
     try {
-      await _firestore.collection('posts').doc(postId).delete();
-      await storageRepository.deleteImageFromStorage("posts", postId);
+      await _firestore.collection(posts).doc(currentPostId).delete();
+      await storageRepository.deleteImageFromStorage(posts, currentPostId);
     } catch (e) {
       if (kDebugMode) {
         print(e.toString());
@@ -42,19 +43,17 @@ class _PostsRepositoryImpl implements PostsRepository {
   @override
   Future<void> getSavedPosts() async {
     try {
-      var userSnap = await _firestore
-          .collection('users')
-          .doc(_auth.currentUser!.uid)
-          .get();
+      var userSnap =
+          await _firestore.collection(users).doc(_auth.currentUser!.uid).get();
       var postsSnap = await _firestore
-          .collection('posts')
-          .orderBy('datePublished', descending: true)
+          .collection(posts)
+          .orderBy(datePublished, descending: true)
           .get();
-      var currSaved = userSnap.data()!['saved'];
+      var currSaved = userSnap.data()![saved];
       var cnt = 0;
       for (int i = 0; i < postsSnap.docs.length; i++) {
         if (currSaved.length > cnt &&
-            postsSnap.docs[i].data()['postId'] == currSaved[cnt]) {
+            postsSnap.docs[i].data()[postId] == currSaved[cnt]) {
           var post = Post.toJson(postsSnap.docs[i].data());
           // Post post = Post(
           //     description: data['description'],
@@ -66,10 +65,10 @@ class _PostsRepositoryImpl implements PostsRepository {
           //     profileImage: data['profileImage'],
           //     likes: data['likes']);
           _firestore
-              .collection('users')
+              .collection(users)
               .doc(_auth.currentUser!.uid)
-              .collection('savedPosts')
-              .doc(post['postId'])
+              .collection(savedPosts)
+              .doc(post[postId])
               .set(post);
           cnt++;
         } else if (currSaved.length == cnt) {
@@ -84,15 +83,16 @@ class _PostsRepositoryImpl implements PostsRepository {
   }
 
   @override
-  Future<void> likePost(String postId, String uid, List likes) async {
+  Future<void> likePost(
+      String currentPostId, String currentUid, List currentLikes) async {
     try {
-      if (likes.contains(uid)) {
-        await _firestore.collection("posts").doc(postId).update({
-          'likes': FieldValue.arrayRemove([uid]),
+      if (currentLikes.contains(currentUid)) {
+        await _firestore.collection(posts).doc(currentPostId).update({
+          likes: FieldValue.arrayRemove([currentUid]),
         });
       } else {
-        await _firestore.collection("posts").doc(postId).update({
-          'likes': FieldValue.arrayUnion([uid]),
+        await _firestore.collection(posts).doc(currentPostId).update({
+          likes: FieldValue.arrayUnion([currentUid]),
         });
       }
     } catch (e) {
@@ -103,25 +103,29 @@ class _PostsRepositoryImpl implements PostsRepository {
   }
 
   @override
-  Future<String> uploadPost(String description, Uint8List file, String uid,
-      String username, String profileImage) async {
-    String res = "some error occurred";
+  Future<String> uploadPost(
+      String currentDescription,
+      Uint8List file,
+      String currentUid,
+      String currentUsername,
+      String currentProfileImage) async {
+    String res = locale.anErrorOccurred;
     try {
-      String postId = const Uuid().v1();
-      String photoUrl = await storageRepository.uploadImageToStorage(
-          "posts", file, true, postId);
+      String currentPostId = const Uuid().v1();
+      String currentPhotoUrl = await storageRepository.uploadImageToStorage(
+          posts, file, true, currentPostId);
       var post = Post.toJson({
-        'description': description,
-        'uid': uid,
-        'postId': postId,
-        'username': username,
-        'datePublished': DateTime.now(),
-        'postUrl': photoUrl,
-        'profileImage': profileImage,
-        'likes': []
+        description: currentDescription,
+        uid: currentUid,
+        postId: currentPostId,
+        username: currentUsername,
+        datePublished: DateTime.now(),
+        postUrl: currentPhotoUrl,
+        profileImage: currentProfileImage,
+        likes: []
       });
-      _firestore.collection('posts').doc(postId).set(post);
-      res = "success";
+      _firestore.collection(posts).doc(currentPostId).set(post);
+      res = success;
     } catch (err) {
       res = err.toString();
     }
@@ -130,24 +134,25 @@ class _PostsRepositoryImpl implements PostsRepository {
 
   @override
   Stream<List<Post>> getListOfPosts(String userId) {
-    var posts = FirebaseFirestore.instance
-        .collection('savedPosts')
+    var postsList = FirebaseFirestore.instance
+        .collection(savedPosts)
         .doc(userId)
-        .collection('posts')
-        .orderBy('datePublished', descending: true)
+        .collection(posts)
+        .orderBy(datePublished, descending: true)
         .snapshots();
 
-    return posts.map(
+    return postsList.map(
         (snapshot) => snapshot.docs.map((doc) => Post.fromJson(doc)).toList());
   }
 
   @override
   Future<Map<String, dynamic>?>? getIsPostSaved(String postId) async {
     return (await _firestore
-            .collection('savedPosts')
+            .collection(savedPosts)
             .doc(_auth.currentUser!.uid)
-            .collection('posts')
+            .collection(posts)
             .doc(postId)
-            .get()).data();
+            .get())
+        .data();
   }
 }

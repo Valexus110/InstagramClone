@@ -6,6 +6,7 @@ import 'package:instagram_example/utils/global_variables.dart';
 import 'package:provider/provider.dart';
 
 import '../../common/widgets/post_card.dart';
+import '../../main.dart';
 
 class SavedPostsScreen extends StatefulWidget {
   const SavedPostsScreen({super.key});
@@ -33,9 +34,9 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           centerTitle: true,
-          title: const Text(
-            "Favourite Posts",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          title: Text(
+           locale.favouritePosts,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
         ),
         body: StreamBuilder(

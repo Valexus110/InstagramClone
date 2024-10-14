@@ -9,6 +9,9 @@ import 'package:instagram_example/authentication/widgets/text_input_field.dart';
 import 'package:provider/provider.dart';
 
 import '../../coordinate_layout/coordinate_layout.dart';
+import '../../main.dart';
+import '../../utils/const_variables.dart';
+import '../utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,8 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
     });
-    String res = await Provider.of<AuthProvider>(context,listen: false).loginUser(
-        email: _emailController.text, password: _passController.text);
+    String res = await Provider.of<AuthProvider>(context, listen: false)
+        .loginUser(
+            email: _emailController.text, password: _passController.text);
     if (!mounted) return;
     goToMainScreen(res);
     setState(() {
@@ -43,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void goToMainScreen(String res) {
-    if (res == "Success") {
+    if (res == success) {
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const CoordinateLayout()),
           (Route<dynamic> route) => false);
@@ -84,14 +88,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 64),
                   TextFieldInput(
                     textEditingController: _emailController,
-                    hintText: 'Enter your email',
+                    hintText: locale.enterEmail,
                     textInputType: TextInputType.emailAddress,
+                    errorText: locale.badFormatEmail,
+                    isValidate: emailValidation,
                   ),
                   const SizedBox(height: 20),
                   TextFieldInput(
                       textEditingController: _passController,
-                      hintText: 'Enter your password',
+                      hintText: locale.enterPassword,
                       textInputType: TextInputType.text,
+                      errorText: locale.weakPassword,
+                      isValidate: passLengthValidation,
                       isPass: true),
                   const SizedBox(height: 20),
                   GestureDetector(
@@ -114,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 color: blueColor,
                               ),
-                              child: const Text("Log in"))),
+                              child: Text(locale.login))),
                   const SizedBox(height: 12),
                   //  Flexible(child: Container(), flex: 2),
                   Row(
@@ -122,16 +130,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: const Text("Don't have an account yet?"),
+                        child: Text(locale.haveNotAnAccount),
                       ),
                       GestureDetector(
                           onTap: navigateToSignup,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 vertical: 8, horizontal: 4),
-                            child: const Text(
-                              "Sign up",
-                              style: TextStyle(
+                            child: Text(
+                             locale.signup,
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

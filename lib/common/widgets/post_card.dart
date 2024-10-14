@@ -1,5 +1,8 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:instagram_example/comments/ui/comment_controller.dart';
 import 'package:instagram_example/models/user.dart' as model;
 import 'package:instagram_example/authentication/ui/auth_provider.dart';
@@ -10,6 +13,7 @@ import 'package:instagram_example/utils/global_variables.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../main.dart';
 import '../../models/post.dart';
 import '../../profile/ui/profile_screen.dart';
 import 'like_animation.dart';
@@ -31,11 +35,13 @@ class PostCardState extends State<PostCard> {
   final postsController = PostsController();
   final _commentController = CommentController();
   late final AuthProvider authProvider;
+  Uint8List? imageByteList;
 
   @override
   void initState() {
     super.initState();
     authProvider = Provider.of(context, listen: false);
+    getPostImage();
     getComments();
     getSaved();
   }
@@ -71,12 +77,34 @@ class PostCardState extends State<PostCard> {
     String message = "";
     await postsController.addBookmark(postId, uid, saved);
     if (saved) {
-      message = "Removed from Favourite Posts";
+      message = locale.removedFromFavourite;
     } else {
-      message = "Added to Favourite Posts";
+      message = locale.addedToFavourite;
     }
     if (!mounted) return;
     showSnackBar(context, message);
+  }
+
+  getPostImage() async {
+    http.Response response = await http.get(Uri.parse(widget.snap.postUrl));
+    var originalUnit8List = response.bodyBytes;
+
+    ui.Image originalUiImage = await decodeImageFromList(originalUnit8List);
+    ByteData? originalByteData = await originalUiImage.toByteData();
+    print('original image ByteData size is ${originalByteData?.lengthInBytes}');
+
+    var codec = await ui.instantiateImageCodec(originalUnit8List,
+        targetHeight: 250, targetWidth: 250);
+    var frameInfo = await codec.getNextFrame();
+    ui.Image targetUiImage = frameInfo.image;
+
+    ByteData? targetByteData =
+        await targetUiImage.toByteData(format: ui.ImageByteFormat.png);
+    print('target image ByteData size is ${targetByteData?.lengthInBytes}');
+    if(!mounted) return;
+    setState(() {
+      imageByteList = targetByteData?.buffer.asUint8List();
+    });
   }
 
   @override
@@ -138,7 +166,7 @@ class PostCardState extends State<PostCard> {
                                               vertical: 16),
                                           shrinkWrap: true,
                                           children: [
-                                            'Delete Post',
+                                            locale.deletePost,
                                           ]
                                               .map((e) => GestureDetector(
                                                     onTap: () async {
@@ -182,36 +210,42 @@ class PostCardState extends State<PostCard> {
                   isLikeAnimating = true;
                 });
               },
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    // height: MediaQuery.of(context).size.height * 0.35,
-                    width: double.infinity,
-                    child: Image.network(
-                      widget.snap.postUrl,
-                      scale: 0.5,
+              child: imageByteList != null
+                  ? Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Image.memory(imageByteList!),
+                        // SizedBox(
+                        //   // height: MediaQuery.of(context).size.height * 0.35,
+                        //   width: double.infinity,
+                        //   child: Image.memory(imageByteList!),
+                        //   // child: Image.memory(
+                        //   //   widget.snap.postUrl,
+                        //   // ),
+                        // ),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: isLikeAnimating ? 1 : 0,
+                          child: LikeAnimation(
+                            isAnimating: isLikeAnimating,
+                            duration: const Duration(
+                              milliseconds: 400,
+                            ),
+                            onEnd: () {
+                              setState(() {
+                                isLikeAnimating = false;
+                              });
+                            },
+                            child: const Icon(Icons.favorite,
+                                color: Colors.white, size: 100),
+                          ),
+                        ),
+                      ],
+                    )
+                  : const Placeholder(
+                      fallbackWidth: 200,
+                      fallbackHeight: 200,
                     ),
-                  ),
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: isLikeAnimating ? 1 : 0,
-                    child: LikeAnimation(
-                      isAnimating: isLikeAnimating,
-                      duration: const Duration(
-                        milliseconds: 400,
-                      ),
-                      onEnd: () {
-                        setState(() {
-                          isLikeAnimating = false;
-                        });
-                      },
-                      child: const Icon(Icons.favorite,
-                          color: Colors.white, size: 100),
-                    ),
-                  ),
-                ],
-              ),
             ),
             Row(
               children: [
@@ -283,7 +317,7 @@ class PostCardState extends State<PostCard> {
                         .titleSmall!
                         .copyWith(fontWeight: FontWeight.w800),
                     child: Text(
-                      '${widget.snap.likes.length} likes',
+                      '${widget.snap.likes.length} ${locale.likes}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
@@ -319,7 +353,7 @@ class PostCardState extends State<PostCard> {
                       onTap: () {},
                       child: TextButton(
                         style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        child: Text("View all $commentLen comments",
+                        child: Text(locale.viewComments(commentLen),
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.white60,

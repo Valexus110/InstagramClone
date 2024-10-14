@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../models/post.dart';
 import '../../models/user.dart' as model;
+import '../../utils/const_variables.dart';
 
 part '../data/profile_repository.dart';
 

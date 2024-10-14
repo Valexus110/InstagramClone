@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:instagram_example/utils/colors.dart';
+import 'package:instagram_example/utils/const_variables.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:instagram_example/authentication/widgets/text_input_field.dart';
 import 'package:provider/provider.dart';
 
 import '../../coordinate_layout/coordinate_layout.dart';
+import '../../main.dart';
+import '../utils.dart';
 import 'auth_provider.dart';
 import 'login_screen.dart';
 
@@ -47,17 +50,17 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() {
       _isLoading = true;
     });
-    String res = await Provider.of<AuthProvider>(context,listen: false).signupUser(
-        email: _emailController.text,
-        password: _passController.text,
-        username: _usernameController.text,
-        bio: _bioController.text,
-        file: _image);
-    if(!mounted) return;
-    if (res == "Success") {
+    String res = await Provider.of<AuthProvider>(context, listen: false)
+        .signupUser(
+            email: _emailController.text,
+            password: _passController.text,
+            username: _usernameController.text,
+            bio: _bioController.text,
+            file: _image);
+    if (!mounted) return;
+    if (res == success) {
       Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (context) => const CoordinateLayout()),
+          MaterialPageRoute(builder: (context) => const CoordinateLayout()),
           (Route<dynamic> route) => false);
     } else {
       showSnackBar(context, res);
@@ -88,7 +91,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: [
                   SvgPicture.asset(
                     'assets/ic_instagram.svg',
-                    colorFilter:  const ColorFilter.mode(primaryColor, BlendMode.srcIn),
+                    colorFilter:
+                        const ColorFilter.mode(primaryColor, BlendMode.srcIn),
                     height: 64,
                   ),
                   const SizedBox(height: 20),
@@ -113,23 +117,32 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 20),
                   TextFieldInput(
                       textEditingController: _usernameController,
-                      hintText: 'Enter your username',
+                      hintText: locale.enterUsername,
+                      errorText: locale.usernameLength,
+                      isValidate: (String text) => text.length > 2,
                       textInputType: TextInputType.text),
                   const SizedBox(height: 20),
                   TextFieldInput(
-                      textEditingController: _emailController,
-                      hintText: 'Enter your email',
-                      textInputType: TextInputType.emailAddress),
+                    textEditingController: _emailController,
+                    hintText: locale.enterEmail,
+                    textInputType: TextInputType.emailAddress,
+                    errorText: locale.badFormatEmail,
+                    isValidate: emailValidation,
+                  ),
                   const SizedBox(height: 20),
                   TextFieldInput(
                       textEditingController: _passController,
-                      hintText: 'Enter your password',
+                      hintText: locale.enterPassword,
                       textInputType: TextInputType.text,
+                      errorText: locale.passwordFormat,
+                      isValidate: passFormatValidation,
                       isPass: true),
                   const SizedBox(height: 20),
                   TextFieldInput(
                       textEditingController: _bioController,
-                      hintText: 'Enter your bio',
+                      hintText: locale.enterBio,
+                      errorText: '',
+                      isValidate: (String str) => true,
                       textInputType: TextInputType.text),
                   const SizedBox(height: 20),
                   InkWell(
@@ -151,23 +164,23 @@ class _SignupScreenState extends State<SignupScreen> {
                                   child: CircularProgressIndicator(
                                   color: primaryColor,
                                 ))
-                              : const Text("Sign Up"))),
+                              : Text(locale.signup))),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: const Text("Already have an account?"),
+                        child: Text(locale.haveAnAccount),
                       ),
                       GestureDetector(
                           onTap: navigateToLogin,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 vertical: 8, horizontal: 4),
-                            child: const Text(
-                              "Login",
-                              style: TextStyle(
+                            child: Text(
+                              locale.login,
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

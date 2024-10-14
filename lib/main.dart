@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:instagram_example/authentication/ui/auth_provider.dart'
     as provider;
+import 'package:instagram_example/chat/ui/chat_provider.dart';
 import 'package:instagram_example/firebase_options.dart';
 import 'package:instagram_example/utils/colors.dart';
 import 'package:provider/provider.dart';
@@ -14,9 +17,15 @@ import 'package:provider/provider.dart';
 import 'authentication/ui/login_screen.dart';
 import 'coordinate_layout/coordinate_layout.dart';
 import 'coordinate_layout/page_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+AppLocalizations get locale {
+  return lookupAppLocalizations(ui.PlatformDispatcher.instance.locale);
+}
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
@@ -94,7 +103,8 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => provider.AuthProvider()),
-          ChangeNotifierProvider(create: (_)=> PageProvider())
+          ChangeNotifierProvider(create: (_) => PageProvider()),
+          ChangeNotifierProvider(create: (_) => ChatProvider()),
         ],
         child: MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -102,6 +112,8 @@ class _MyAppState extends State<MyApp> {
             theme: ThemeData.dark().copyWith(
               scaffoldBackgroundColor: mobileBackgroundColor,
             ),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: _isLoading
                 ? const Center(
                     child: CircularProgressIndicator(

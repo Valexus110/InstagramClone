@@ -2,7 +2,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:instagram_example/main.dart';
 import 'package:instagram_example/models/post.dart';
+import 'package:instagram_example/utils/const_variables.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../storage/storage_controller.dart';

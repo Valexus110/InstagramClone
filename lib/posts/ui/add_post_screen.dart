@@ -9,6 +9,9 @@ import 'package:instagram_example/utils/colors.dart';
 import 'package:instagram_example/utils/utils.dart';
 import 'package:provider/provider.dart';
 
+import '../../main.dart';
+import '../../utils/const_variables.dart';
+
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
 
@@ -34,11 +37,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
       String res = await postsController.uploadPost(
           _descriptionController.text, _file!, uid, username, profileImage);
       if (!mounted) return;
-      if (res == "success") {
+      if (res == success) {
         setState(() {
           _isLoading = false;
         });
-        showSnackBar(context, 'Successfully posted');
+        showSnackBar(context, locale.postSuccessful);
         clearImage();
       } else {
         setState(() {
@@ -56,11 +59,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
         context: context,
         builder: (context) {
           return SimpleDialog(
-            title: const Text("Create Post"),
+            title: Text(locale.createPost),
             children: [
               SimpleDialogOption(
                 padding: const EdgeInsets.all(20),
-                child: const Text("Take a photo"),
+                child: Text(locale.takePhoto),
                 onPressed: () async {
                   Navigator.of(context).pop();
                   Uint8List file = await pickImage(ImageSource.camera);
@@ -71,7 +74,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               ),
               SimpleDialogOption(
                 padding: const EdgeInsets.all(20),
-                child: const Text("Choose from gallery"),
+                child: Text(locale.chooseFromGallery),
                 onPressed: () async {
                   Navigator.of(context).pop();
                   Uint8List? file = await pickImage(ImageSource.gallery);
@@ -84,7 +87,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               ),
               SimpleDialogOption(
                 padding: const EdgeInsets.all(20),
-                child: const Text("Cancel"),
+                child: Text(locale.cancel),
                 onPressed: () async {
                   Navigator.of(context).pop();
                 },
@@ -115,9 +118,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  "Add new post",
-                  style: TextStyle(
+                Text(
+                  locale.addNewPost,
+                  style: const TextStyle(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.bold),
@@ -139,15 +142,15 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => clearImage(),
               ),
-              title: const Text("Adding new post"),
+              title: Text(locale.addingPost),
               centerTitle: false,
               actions: [
                 TextButton(
                     onPressed: () =>
                         postImage(user.uid, user.username, user.photoUrl),
-                    child: const Text(
-                      'Post',
-                      style: TextStyle(
+                    child: Text(
+                      locale.post,
+                      style: const TextStyle(
                         color: Colors.blueAccent,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -175,8 +178,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         width: MediaQuery.of(context).size.width * 0.4,
                         child: TextField(
                           controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            hintText: "Write a caption...",
+                          decoration: InputDecoration(
+                            hintText: locale.writeCaption,
                             border: InputBorder.none,
                           ),
                           maxLines: 8,
