@@ -145,7 +145,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       isValidate: (String str) => true,
                       textInputType: TextInputType.text),
                   const SizedBox(height: 20),
-                  InkWell(
+                  GestureDetector(
                       onTap: signUpUser,
                       child: Container(
                           width: double.infinity,

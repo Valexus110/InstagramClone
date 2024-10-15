@@ -44,6 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     return ListView.builder(
                       itemBuilder: (context, index) {
                         return GestureDetector(
+                            key: Key("$index"),
                             onTap: () => setState(() {
                                   context.read<ChatProvider>().chatId =
                                       _dbChats[index].chatterUid;

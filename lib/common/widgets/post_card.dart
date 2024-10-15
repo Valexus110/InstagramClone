@@ -41,7 +41,7 @@ class PostCardState extends State<PostCard> {
   void initState() {
     super.initState();
     authProvider = Provider.of(context, listen: false);
-    getPostImage();
+    _setPostImage();
     getComments();
     getSaved();
   }
@@ -85,8 +85,8 @@ class PostCardState extends State<PostCard> {
     showSnackBar(context, message);
   }
 
-  getPostImage() async {
-    http.Response response = await http.get(Uri.parse(widget.snap.postUrl));
+  Future<ByteData?> getPostImage(http.Client client) async {
+    final response = await client.get(Uri.parse(widget.snap.postUrl));
     var originalUnit8List = response.bodyBytes;
 
     ui.Image originalUiImage = await decodeImageFromList(originalUnit8List);
@@ -101,9 +101,14 @@ class PostCardState extends State<PostCard> {
     ByteData? targetByteData =
         await targetUiImage.toByteData(format: ui.ImageByteFormat.png);
     print('target image ByteData size is ${targetByteData?.lengthInBytes}');
-    if(!mounted) return;
+    return targetByteData;
+  }
+
+  _setPostImage() async {
+    ByteData? imageByteData = await getPostImage(http.Client());
+    if (!mounted) return;
     setState(() {
-      imageByteList = targetByteData?.buffer.asUint8List();
+      imageByteList = imageByteData?.buffer.asUint8List();
     });
   }
 

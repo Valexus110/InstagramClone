@@ -49,8 +49,8 @@ dependencies:
   connectivity_plus:
   shared_preferences:
   flutter_native_splash:
-  http: ^1.2.2
-  chat_bubbles: ^1.6.0
+  http:
+  chat_bubbles:
 
 flutter_native_splash:
   color: "#000000"
@@ -63,6 +63,10 @@ flutter_native_splash:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_driver:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -70,6 +74,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+  mockito: ^5.4.4
+  build_runner:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

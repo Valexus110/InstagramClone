@@ -23,6 +23,7 @@ AppLocalizations get locale {
   return lookupAppLocalizations(ui.PlatformDispatcher.instance.locale);
 }
 
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);

@@ -34,18 +34,18 @@ class CommentCardState extends State<CommentCard> {
                   RichText(
                       text: TextSpan(children: [
                     TextSpan(
-                      text: widget.snap.name,//['name'],
+                      text: widget.snap.name,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
-                      text: ' ${widget.snap.text}', //['text']}',
+                      text: ' ${widget.snap.text}',
                     )
                   ])),
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       DateFormat.yMMMd().format(
-                        widget.snap.datePublished,//['datePublished'].toDate(),
+                        widget.snap.datePublished,
                       ),
                       style: const TextStyle(
                           fontSize: 12, fontWeight: FontWeight.w400),
